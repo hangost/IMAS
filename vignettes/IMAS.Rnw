@@ -1,0 +1,290 @@
+%\VignetteIndexEntry{IMAS : Integrative analysis of Multi-omics data for Alternative Splicing}
+%\VignetteDepends{GenomicFeatures}
+%\VignetteDepends{IVAS}
+%\VignettePackage{IMAS}
+
+\documentclass[a4paper,11pt]{article}
+\usepackage{graphicx}
+
+\usepackage{pdfpages}
+
+\usepackage{a4wide}
+\graphicspath{{./}}
+
+
+<<style, echo=FALSE, results=tex>>=
+BiocStyle::latex(use.unsrturl=FALSE)
+@
+
+\title{\Biocpkg{IMAS} : Integrative analysis of Multi-omics data for Alternative Splicing}
+\author{Seonggyun Han and Younghee Lee}
+
+\begin{document}
+\SweaveOpts{concordance=TRUE}
+
+\maketitle
+
+\tableofcontents
+
+\section{Introduction}
+A balance of alternatively spliced (AS) transcript isoforms is critical for a normal phenotype, and dysregulated expression might result in phenotypic and clinical alterations in certain individuals and groups \cite{Jamal}. For example, the expression ratio (denoted as PSI: Percent Spliced In) of AS transcript isoforms or AS exons is modulated in genes that are associated with many complex diseases, such as cancer and diabetes \cite{Seonggyun}. Moreover, molecular factors that affect the expression ratio, such as genetic variations (sQTLs) and methylation (defined as me-sQTLs), give additional insight into the molecular mechanisms that explain the regulatory elements in splicing machinery \cite{Seonggyun}. 
+The Bioconductor R package \Biocpkg{IMAS} offers two components. First, \Biocpkg{IMAS} provides an integrative analysis tool to detect differential AS events (e.g., exon skipping, intron retention, and 3- and 5-prime alternative splicing sites) using paired and junction reads that are created from high-throughput RNA-seq data. Second, \Biocpkg{IMAS} links AS exons that are differentially expressed across groups, defined as PSI, to molecular factors (eg, SNPs and DNA methylation). IMAS can identify sQTLs and me-sQTLs to interpret their molecular functions. In addition, \Biocpkg{IMAS} can incorporate the clinical information of a patient and determine whether exon skipping or inclusion affects the clinical outcomes of disease groups. 
+Statistical methods (linear regression model \cite{Chambers} or generalized linear mixed model \cite{Breslow} in sQTLs) are used to identify significant differences in PSI values across groups, sQTLs, me-sQTLs, and clinical outcome associations. \Biocpkg{IMAS} can accept mapped bam files, which may be created from several mapping tools, such as bwa \cite{Li} and bowtie \cite{Langmead}. \Biocpkg{IMAS} analyzes all paired-end and junction reads that are extracted using \Biocpkg{Rsamtools}. Moreover, all functions of this package accept a simple FPKM matrix dataset of transcripts (output file format of assemble tools, such as cufflinks) through \Biocpkg{IVAS}, which is an R/bioconductor package for identifying genetic variants that affect alternative splicing patterns with the FPKM matrix dataset. \Biocpkg{IMAS} also provides a function for visualizing all identified AS transcript isoforms, sQTLs, me-sQTLs, and clinical outcomes.
+
+\section{The input data set}
+This subsection introduces the input data. To run the \Biocpkg{IMAS} package, a GTF file is required as a reference transcript model. Based on this AS transcript model, AS exons are tabulated. Moreover, \Biocpkg{IMAS} accepts the mapped bam file to estimate PSI values in a given AS exon. If the PSI is calculated with simple expression matrix data that consist of FPKM values of isoforms through \Biocpkg{IVAS}, the PSI dataset can be analyzed by all functions of \Biocpkg{IMAS}. To discover AS exons with differential PSI values between groups, the specific groups for each individual are required. To identify sQTLs, a genotype data frame for each polymorphism and its position are required. The sQTL analysis is carried out using \Rfunction{sQTLsFinder} in the \Biocpkg{IVAS} package. To identify me-sQTLs, the expression and position of methylation loci are needed. Clinical information, such as survival status and survival time, is inputted for survival analysis.
+
+\subsection{The transcript model data}
+The GTF file including gene structures such as genomic coordinate (position) of all exons and transcripts are required. The GTF file should be loaded with \Robject{TxDb} object in the \Biocpkg{GenomicFeatures} package.
+
+\subsection{The expression data}
+To calculate PSI values of AS exons, \Biocpkg{IMAS} uses a mapped bam file as experimental expression data from RNA-seq. The paths of all bam files can be assigned a variable. An example is described in Section 4, Loading data. Also, the PSI values can be calculated from the FPKM matrix dataset through \Rfunction{RatioFromFPKM} (examples of the method with FPKM are described in the \Biocpkg{IVAS} package).
+
+\begin{table}[h!]
+\begin{tabular}{c c c}
+&path&names\\
+1&./extdata/bamfiles/sample1.bam&ind1\\
+2&./extdata/bamfiles/sample2.bam&ind2\\
+3&./extdata/bamfiles/sample3.bam&ind3\\
+4&./extdata/bamfiles/sample4.bam&ind4\\
+\end{tabular}
+\end{table}
+
+\subsection{The difference in splicing ratio of a given exon between Groups}
+Once the PSI values are calculated for each AS exon from the mapped bam files or FPKM dataset, then with the PSI, one can identify differentially expressed exons between groups For this analysis, groups for each sample are required as the list type of R. The names of the list data must be labeled "GroupA" and "GroupB."
+
+\begin{table}[h!]
+\begin{tabular}{c c}
+\$GroupA&\\
+ind1&ind4\\
+\$GroupB&\\
+ind2&ind3\\
+\end{tabular}
+\end{table}
+
+\subsection{The genotype and genomic position dataset of SNPs}
+To identify polymorphisms that are associated with the splicing ratio (PSI) of a given exon, the genotype data should be prepared as simple matrix data. \Biocpkg{IMAS} carries out this analysis using sqtlfinder in the \Biocpkg{IVAS} package. Details and examples are described in the \Biocpkg{IVAS} package.
+
+\subsection{The expression and position dataset of methylation}
+\Biocpkg{IMAS} identifies methylation loci that are associated with the splicing ratio (PSI) of a given exon. A dataset needs to include the expression of methylation (i.e., beta value) and the genomic position of each methylation. In this file, each row and column label the methylation IDs and individual names, respectively.
+
+
+The expressions of methylations
+\begin{table}[h!]
+\begin{tabular}{c c c c c}
+&ind1&ind2&ind3&ind4\\
+methyl1&14.4&20.2&21.2&20.1\\
+methyl2&7.4&7.2&6.2&10.1\\
+methyl3&13.2&15.8&11.2&15.9\\
+\end{tabular}
+\end{table}
+
+The positions of methylations
+\begin{table}[h!]
+\begin{tabular}{c c c}
+Methyl&CHR&locus\\
+methyl1&1&4834015\\
+methyl2&11&61523247\\
+methyl3&11&2382791\\
+\end{tabular}
+\end{table}
+
+
+\subsection{Clinical information}
+The clinical information of matched samples that have expression data is used to test the association of a splicing ratio (PSI) of a given exon with clinical outcomes. Clinical information must include the survival status and survival time, which are the first and second columns in the file, respectively. In addition, each row represents an individual, labeled with an ID.
+
+\begin{table}[h!]
+\begin{tabular}{c c c}
+&status&sur\_time\\
+ind1&0&100\\
+ind2&1&302\\
+ind3&1&402\\
+ind4&0&81\\
+\end{tabular}
+\end{table}
+
+\section{Example dataset}
+We provide example data to explain the manual of the \Biocpkg{IMAS} package. The dataset contains 50 individuals with breast cancer, half of whom are assigned as PR-positive, with the other half PR-negative. Our assumption is that the exon, located in the PRGA gene on chr11:100962491-100962607, has differential PSI values for the two groups and that the difference is associated with SNPs or methylation in the exon and its flanking introns. The RNA-seq, SNP, methylation, and clinical data for this example are provided in the \Biocpkg{IMAS} package.
+
+\section{Loading data}
+For this analysis, load the following data and an object from \Biocpkg{IMAS}, the group information for each individual, the genotypes and genomic coordinates of SNPs, the expression and genomic coordinates of methylation, clinical information, and the \Robject{TxDb} object from GTF.
+\\
+Loading \Biocpkg{IMAS} package :
+<<loading Names package,results=hide>>=
+library(IMAS)
+@
+Loading expression data : 
+<<loading the paths of the expression data>>=
+data(bamfilestest)
+ext.dir <- system.file("extdata", package="IMAS")
+samplebamfiles[,"path"] <- 
+    paste(ext.dir,"/samplebam/",samplebamfiles[,"path"],".bam",sep="")
+@
+Loading group information : 
+<<loading group information>>=
+data(sampleGroups)
+@
+Loading SNP data : 
+<<loading the SNP data>>=
+data(samplesnp)
+@
+Loading SNP position data : 
+<<loading the SNP position data>>=
+data(samplesnplocus)
+@
+Loading methylation expression data : 
+<<loading methylation expression data>>=
+data(samplemethyl)
+@
+Loading methylation position data : 
+<<loading methylation position data>>=
+data(samplemethyllocus)
+@
+Loading clinical information data : 
+<<loading clinical information data>>=
+data(sampleclinical)
+@
+Loading \Robject{TxDb} object : 
+<<loading the txdb data>>=
+sampledb <- list.files(ext.dir,pattern="DB",full.names=TRUE)
+transdb <- loadDb(sampledb)
+transdb
+@
+
+\Robject{TxDb} can be created from the GTF reference file using the \Rfunction{makeTxDbFromGFF} function in \Biocpkg{GenomicFeatures} in R/Bioconductor.
+
+\section{Running \Biocpkg{IMAS} for integrative alternative splicing analysis}
+All results from each function of the \Biocpkg{IMAS} package are saved by adding slots in the \Robject{ASdb} object, which is a s4 class type object. The last row of the \Robject{ASdb} object indicates the names of currently saved slots. All functions of \Biocpkg{IMAS} allow one to use a multi-thread through a \Rfunction{foreach} function.
+
+\subsection{Tabulating alternatively spliced exons}
+\Biocpkg{IMAS} tabulates AS exons and categorizes them into four types of AS patterns: exon skipping, alternative 3-prime splice site, alternative 5-prime splice site, and intron retention. The \Rfunction{Splicingfinder} function in the \Biocpkg{IVAS} package is used in this step. If a single gene is inputted, AS exons are defined only as a single gene. The result will be saved in the slot, named "SplicingModel" of the \Robject{ASdb} object.
+\\
+To use this function : 
+<<Splicingfinder function,>>=
+ASdb <- Splicingfinder(GTFdb=transdb,calGene="ENSG00000082175",Ncor=1)
+ASdb <- ExonsCluster(ASdb,transdb)
+ASdb
+
+head(slot(ASdb,"SplicingModel")$"ES")
+@
+As an example, search for sQTLs in the ENSG00000082175 gene. The first column, labeled "Index," is a unique name for each splicing model, and the index number of the first column is a generally used as an identifier, commonly used in other \Biocpkg{IMAS} functions. One can use the argument for "out.dir" to save the results in a specific directory.
+
+\subsection{Estimating the expression ratio (Percent Spliced In) of AS exons with bam files of RNA-seq}
+The \Rfunction{RatioFromReads} function calculates the PSI values of AS exons, based on splicing models in the \Robject{ASdb}. The result will be saved in the "Ratio" slot of \Robject{ASdb}. This needs matrix data, including the paths of bam files and the sample names, which will be labeled in the columns of the results of this function in the first and second columns, respectively.
+<<RatioFromReads function>>=
+ASdb <- RatioFromReads(ASdb=ASdb,samplebamfiles,readsInfo="paired",
+    readLen=50,inserSize=40,minr=3,CalIndex="ES3",Ncor=1)
+ASdb
+
+head(rbind(slot(ASdb,"Ratio")$"ES"[,1:20]))
+@
+As an example, one single index number, ES3, returns the PSI value of a splicing pattern, which is an AS exon located in chr11:100962491-100962607. One can use the argument for "out.dir" to save the results in a specific directory.
+
+\subsection{Detecting alternatively spliced exons with differential PSIs between groups}
+The \Rfunction{CompGroupAlt} function calculates significant differences in PSIs between groups using linear regression. The result will be saved in the "GroupDiff" slot of \Robject{ASdb}. The list object includes sample names for each group and is labeled "GroupA" and "GroupB." The sample names should be matched with the column names of the "Ratio" slot in the \Robject{ASdb} object, described above (5.2).
+<<CompGroupAlt function>>=
+ASdb <- CompGroupAlt(ASdb=ASdb,GroupSam=GroupSam,Ncor=1,CalIndex="ES3")
+ASdb
+
+head(slot(ASdb,"GroupDiff")$"ES")
+@
+You can use the argument for "out.dir" to save your results in a specific directory.
+
+\subsection{sQTLs analysis}
+\Rfunction{sQTLsFinder} in the \Biocpkg{IVAS} package is used to identify significant SNPs that are associated with AS ratio (PSI). The result will be saved in the slot labeled "sQTLs" of \Robject{ASdb}.
+<<sqtlfinder function>>=
+ASdb <- sQTLsFinder(ASdb=ASdb,Total.snpdata=samplesnp,Total.snplocus=samplesnplocus,
+    GroupSam=GroupSam,Ncor=1,CalIndex="ES3",method="lm")
+ASdb
+
+head(slot(ASdb,"sQTLs")$"ES")
+@
+One can use the argument for "out.dir" to save the results in a specific directory.
+
+\subsection{me-sQTLs analysis}
+The \Rfunction{MEsQTLFinder} function identifies methylation locus that may affect AS events. This \Rfunction{MEsQTLFinder} function uses a linear regression model with the expression of each methylation as variables. The result will be saved in the "Me.sQTLs" slot of the \Robject{ASdb} object.
+<<MEsQTLFinder function>>=
+ASdb <- MEsQTLFinder(ASdb=ASdb,Total.Medata=sampleMedata,Total.Melocus=sampleMelocus,
+    GroupSam=GroupSam,Ncor=1,CalIndex="ES3")
+ASdb
+
+head(slot(ASdb,"Me.sQTLs")$"ES")
+@
+One can use the argument for "out.dir" to save the results in a specific directory.
+
+\subsection{Global effect of SNP and methylation for alternative splicing among individuals}
+The GroupSam parameter specifies a group for each individual. The default option for this parameter is that there is no specified group for grouping individuals. With this default option, the \Rfunction{sQTLsFinder} and \Rfunction{MEsQTLFinder} functions identify sQTLs and me-sQTLs for a set of all individuals. The option of the parameters for assigning specific groups is set for each individual, which forms groups: GroupA and GroupB, as described in Section 5.3. This option identifies sQLs and me-sQTLs that are associated with GroupA and GroupB.
+
+\subsection{Clinical analysis}
+The \Rfunction{ClinicAnalysis} function identifies which exons ,that are differentially expressed in groups, are associated with clinical outcomes. The result of this analysis will be saved in the "Clinical" slot of \Robject{ASdb}.
+<<clinical analysis function>>=
+ASdb <- ClinicAnalysis(ASdb=ASdb,ClinicalInfo=Clinical.data,Ncor=1,CalIndex="ES3")
+ASdb
+
+head(slot(ASdb,"Clinical")$"ES")
+@
+You can use the argument for "out.dir" to save your results in a specific directory.
+
+\section{Visualizing the result}
+The \Rfunction{ASvisualization} function visualizes the information that is saved in \Robject{ASdb} slots, such as AS models, PSI values of AS exons, sQTLs, me-sQTLs, and clinical results. With an index number as an input of this function, the splicing model, SNP, methylation, clinical information is plotted and saved to one single pdf file that is named with the index number.
+
+<<visualization function,results=hide>>=
+exon.range <- exonsBy(transdb,by="tx")
+select.cns <- c("TXCHROM","TXNAME","GENEID","TXSTART","TXEND","TXSTRAND")
+txTable <- select(transdb, keys=names(exon.range),columns=select.cns,keytype="TXID")
+ASvisualization(ASdb,CalIndex="ES3",txTable,exon.range,samplesnp,samplesnplocus,
+                sampleMedata,sampleMelocus,GroupSam,Clinical.data,out.dir="./")
+@
+The plots of results from the example analysis are as follows:
+\begin{center}
+\includegraphics[page=1,width=1\textwidth]{ES3.pdf}
+\end{center}
+The first page of the pdf result file shows the splicing model of the inputted index. The x-axis and y-axis indicate the genomic coordinates and transcripts with each splicing pattern, respectively. The exon in cyan indicates the alternatively spliced target, and the grey represents neighboring exons. The representative exons are shown in red, and the brightness represents the number of transcripts that have the respective exons. The SNP and methylation information is shown below the exons. The significant SNPs and methylations have the red color.
+
+
+\begin{center}
+\includegraphics[page=2,width=0.8\textwidth]{ES3.pdf}
+\end{center}
+This plot shows the distribution of PSI values between two groups.
+
+
+\begin{center}
+\includegraphics[page=3,width=0.8\textwidth]{ES3.pdf}
+\end{center}
+This plot shows the sQTL results. For each group, the distribution of PSI values across genotypes is shown as a boxplot.
+
+
+\begin{center}
+\includegraphics[page=6,width=0.8\textwidth]{ES3.pdf}
+\end{center}
+The result of the significant Me-sQTLs is shown in two plots: the left panel is the distribution of PSI values versus methylation expression, and the right panel indicates the methylation levels in each group.
+
+
+\begin{center}
+\includegraphics[page=9,width=0.8\textwidth]{ES3.pdf}
+\end{center}
+Expected survival outcomes of two groups, expressing high and low PSIs, are plotted.
+
+
+\section{Session Information}
+<<sessionInfo, echo=FALSE>>=
+sessionInfo()
+@
+\begin{thebibliography}{9}
+
+\bibitem{Jamal} Jamal Tazia, Nadia Bakkoura, Stefan Stamm. Alternative splicing and disease. Biochim Biophys Acta, 2008. doi: 10.1016/j.bbadis.2008.09.017.
+
+\bibitem{Seonggyun} Seonggyun Han, Hyeim Jung, Kichan Lee, Hyunho Kim, Sangsoo Kim. 2017. Genome wide discovery of genetic variants affecting alternative splicing patterns in human using bioinformatics method. 2017. Genes Genom. doi:10.1007/s13258-016-0466-7
+
+\bibitem{Breslow} N.E. Breslow and D.G. Clayton. Approximate Inference in Generalized Linear Mixed Models. Journal of the American Statistical Association. 1993. 88 421: 9-25.
+
+\bibitem{Chambers} Chambers, J. M. Linear models. Chapter 4 of Statistical Models in S eds J. M. Chambers and T. J. Hastie, Wadsworth, and Brooks Cole. 1992.
+
+\bibitem{Li} Li H, Durbin R. Fast and accurate short read alignment with Burrows-Wheeler transform. Bioinformatics. 2009. doi: 10.1093/bioinformatics/btp324.
+
+\bibitem{Langmead} Langmead B, Salzberg SL. Fast gapped-read alignment with Bowtie 2. Nat Methods. 2012. doi: 10.1038/nmeth.1923.
+
+\end{thebibliography}
+
+\end{document}
+
