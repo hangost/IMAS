@@ -21,4 +21,4 @@ To view vignette of IMAS, start R and enter:
 ``` r
 browseVignettes("IMAS")
 ```
-The document provides an implementation detail and example data sets.
+The document provides an implementation detail with example data sets.
