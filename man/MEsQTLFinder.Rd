@@ -58,8 +58,10 @@
     samplebamfiles[,"path"] <- paste(ext.dir,"/samplebam/",samplebamfiles[,"path"],".bam",sep="")
     sampleDB <- system.file("extdata", "sampleDB", package="IMAS")
     transdb <- loadDb(sampleDB)
-    #ASdb <- Splicingfinder(transdb,Ncor=1)
-    #ASdb <- ExonsCluster(ASdb,transdb)
-    #ASdb <- RatioFromReads(ASdb,samplebamfiles,"paired",50,40,3,CalIndex="ES3")
-    #ASdb <- MEsQTLFinder(ASdb,sampleMedata,sampleMelocus,CalIndex="ES3",GroupSam=GroupSam,out.dir=NULL)
+    \dontrun{
+    ASdb <- Splicingfinder(transdb,Ncor=1)
+    ASdb <- ExonsCluster(ASdb,transdb)
+    ASdb <- RatioFromReads(ASdb,samplebamfiles,"paired",50,40,3,CalIndex="ES3")
+    ASdb <- MEsQTLFinder(ASdb,sampleMedata,sampleMelocus,CalIndex="ES3",GroupSam=GroupSam,out.dir=NULL)
+    }
 }

@@ -31,6 +31,8 @@
 \examples{
     sampleDB <- system.file("extdata", "sampleDB", package="IMAS")
     transdb <- loadDb(sampleDB)
-    #ASdb <- Splicingfinder(transdb,Ncor=1)
-    #ASdb <- ExonsCluster(ASdb,transdb)
+    \dontrun{
+    ASdb <- Splicingfinder(transdb,Ncor=1)
+    ASdb <- ExonsCluster(ASdb,transdb)
+    }
 }

@@ -2,20 +2,17 @@
 \alias{sampleMelocus}
 \docType{data}
 \title{
-    Methylation locus
+    Genomic locus of methylations
 }
 \description{
-    Methylation locus
+    Genomic location of 5 methylation loci located in the PRGA gene for 50 samples, which are matched with methylation level data provided in \pkg{IMAS}. The detailed overview of the data is described in the vignette.
 }
 \usage{data(samplemethyllocus)}
 \format{
-    A data frame with 5 methylations and locus of them
+    A data frame with genomic locus of 5 methylations
 }
 \value{
-    A data frame with 5 methylations and locus of them
-}
-\source{
-    The data was provided from \pkg{IMAS}
+    A data frame with genomic locus of 5 methylations
 }
 \examples{
     data(samplemethyllocus)

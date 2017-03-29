@@ -67,16 +67,16 @@
     samplebamfiles[,"path"] <- paste(ext.dir,"/samplebam/",samplebamfiles[,"path"],".bam",sep="")
     sampleDB <- system.file("extdata", "sampleDB", package="IMAS")
     transdb <- loadDb(sampleDB)
-    #ASdb <- Splicingfinder(transdb,Ncor=1)
-    #ASdb <- ExonsCluster(ASdb,transdb)
-    #ASdb <- RatioFromReads(ASdb,samplebamfiles,"paired",50,40,3,CalIndex="ES3")
-    #ASdb <- sQTLsFinder(ASdb,samplesnp,samplesnplocus,method="lm")
-    #ASdb <- CompGroupAlt(ASdb,GroupSam,CalIndex="ES3")
-    #ASdb <- MEsQTLFinder(ASdb,sampleMedata,sampleMelocus,CalIndex="ES3",GroupSam=GroupSam,out.dir=NULL)
-    #ASdb <- ClinicAnalysis(ASdb,Clinical.data,CalIndex="ES3",out.dir=NULL)
-    #exon.range <- exonsBy(transdb,by="tx")
-    #txTable <- try(select(transdb, keys=names(exon.range),
-    #    columns=c("TXCHROM","TXNAME","GENEID","TXSTART","TXEND","TXSTRAND"), keytype="TXID"),silent=T)
-    #ASvisualization(ASdb,CalIndex="ES3",txTable,exon.range,samplesnp,samplesnplocus,
-    #    sampleMedata,sampleMelocus,GroupSam,Clinical.data,out.dir="./")
+    ASdb <- Splicingfinder(transdb,Ncor=1)
+    ASdb <- ExonsCluster(ASdb,transdb)
+    ASdb <- RatioFromReads(ASdb,samplebamfiles,"paired",50,40,3,CalIndex="ES3")
+    ASdb <- sQTLsFinder(ASdb,samplesnp,samplesnplocus,method="lm")
+    ASdb <- CompGroupAlt(ASdb,GroupSam,CalIndex="ES3")
+    ASdb <- MEsQTLFinder(ASdb,sampleMedata,sampleMelocus,CalIndex="ES3",GroupSam=GroupSam,out.dir=NULL)
+    Sdb <- ClinicAnalysis(ASdb,Clinical.data,CalIndex="ES3",out.dir=NULL)
+    exon.range <- exonsBy(transdb,by="tx")
+    sel.cn <- c("TXCHROM","TXNAME","GENEID","TXSTART","TXEND","TXSTRAND")
+    txTable <- select(transdb, keys=names(exon.range),columns=sel.cn,keytype="TXID")
+    ASvisualization(ASdb,CalIndex="ES3",txTable,exon.range,samplesnp,samplesnplocus,
+        sampleMedata,sampleMelocus,GroupSam,Clinical.data,out.dir="./")
 }

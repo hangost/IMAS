@@ -2,10 +2,10 @@
 \alias{Clinical.data}
 \docType{data}
 \title{
-    A data frame for example clinical data
+    A data frame for clinical data
 }
 \description{
-    A data frame consisting of survival status and time for each sample
+    A data frame including survival status and time for each sample. This data is a simulated clinical data for 50 samples (half of whom are assigned as PR-positive and the other half PR-negative), which is used in analysis with \pkg{IMAS}. The detailed overview of the data is described in the vignette.
 }
 \usage{data(sampleclinical)}
 \format{
@@ -13,11 +13,5 @@
 }
 \value{
     A data frame with survival information and times on the 50 samples
-}
-\source{
-    The data was provided from \pkg{IMAS}
-}
-\examples{
-    data(sampleclinical)
 }
 \keyword{datasets}

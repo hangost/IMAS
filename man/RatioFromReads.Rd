@@ -50,9 +50,7 @@
     Seonggyun Han, Younghee Lee
 }
 \seealso{
-    \code{\link[Rsamtools]{ScanBamParam}},
-    \code{\link[IMAS]{SplicingReads}},
-    \code{\link[IMAS]{ReadBamToPosition}}
+    \code{\link[IMAS]{SplicingReads}}
 }
 \examples{
     data(bamfilestest)
@@ -60,7 +58,9 @@
     samplebamfiles[,"path"] <- paste(ext.dir,"/samplebam/",samplebamfiles[,"path"],".bam",sep="")
     sampleDB <- system.file("extdata", "sampleDB", package="IMAS")
     transdb <- loadDb(sampleDB)
-    #ASdb <- Splicingfinder(transdb,Ncor=1)
-    #ASdb <- ExonsCluster(ASdb,transdb)
-    #ASdb <- RatioFromReads(ASdb,samplebamfiles,"paired",50,40,3,CalIndex="ES3")
+    \dontrun{
+    ASdb <- Splicingfinder(transdb,Ncor=1)
+    ASdb <- ExonsCluster(ASdb,transdb)
+    ASdb <- RatioFromReads(ASdb,samplebamfiles,"paired",50,40,3,CalIndex="ES3")
+    }
 }
