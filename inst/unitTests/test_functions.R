@@ -71,7 +71,7 @@ test_All_functions <- function(){
     checkTrue(identical(names(slot(ASdb,"GroupDiff")),c("ES","ASS","IR")))
 
     ## Identify significant SNPs that are associated with AS ratio (PSI)
-    ASdb <- sQTLsFinder(ASdb=ASdb,Total.snpdata=samplesnp,Total.snplocus=samplesnplocus,GroupSam=GroupSam,Ncor=1,CalIndex="ES3",method="lm")
+    ASdb <- sQTLsFinder(ASdb=ASdb,Total.snpdata=samplesnp,Total.snplocus=samplesnplocus,GroupSam=NULL,Ncor=1,CalIndex="ES3",method="lm")
     ## The result is saved in "sQTLs" added slot in the ASdb object. The data in the slot is a list object consisting of three elements ("ES","ASS", and "IR")
     checkTrue(is.list(slot(ASdb,"sQTLs")))
     checkTrue(identical(names(slot(ASdb,"sQTLs")),c("ES","ASS","IR")))
@@ -89,8 +89,8 @@ test_All_functions <- function(){
     checkTrue(identical(names(slot(ASdb,"Clinical")),c("ES","ASS","IR")))
     
     ## All functions of this package provide to use multi-core
-    ASdb_1 <- sQTLsFinder(ASdb=ASdb,Total.snpdata=samplesnp,Total.snplocus=samplesnplocus,GroupSam=GroupSam,Ncor=1,CalIndex="ES3",method="lm")
-    ASdb_4 <- sQTLsFinder(ASdb=ASdb,Total.snpdata=samplesnp,Total.snplocus=samplesnplocus,GroupSam=GroupSam,Ncor=4,CalIndex="ES3",method="lm")
+    ASdb_1 <- sQTLsFinder(ASdb=ASdb,Total.snpdata=samplesnp,Total.snplocus=samplesnplocus,GroupSam=NULL,Ncor=1,CalIndex="ES3",method="lm")
+    ASdb_4 <- sQTLsFinder(ASdb=ASdb,Total.snpdata=samplesnp,Total.snplocus=samplesnplocus,GroupSam=NULL,Ncor=4,CalIndex="ES3",method="lm")
     identical(slot(ASdb_1,"sQTLs"),slot(ASdb_4,"sQTLs"))
 }
 
