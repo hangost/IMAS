@@ -17,7 +17,7 @@ MEsQTLFinder <- function(ASdb=NULL,Total.Medata=NULL,Total.Melocus=NULL,
             Meid <- rownames(test.Me)[test.each.num]
             te.Me <- rbind(Me.mat[test.each.num,])
             realNA <- colnames(te.Me)[te.Me != "NA" & !is.na(te.Me)]
-            if (realNA > as.integer(ncol(test.Me)/2)){
+            if (length(realNA) > as.integer(ncol(test.Me)/2)){
                 te.Me <- rbind(te.Me[,realNA])
                 test.exp <- rbind(test.exp[,realNA])
                 total.mat <- rbind(test.exp,te.Me)
