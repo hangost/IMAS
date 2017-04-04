@@ -1,7 +1,6 @@
 MEsQTLFinder <- function(ASdb=NULL,Total.Medata=NULL,Total.Melocus=NULL,
     GroupSam=NULL,Ncor=1,CalIndex=NULL,out.dir=NULL){
     CalSigMe <- function(ratio.mat,Me.mat,overlapMe,each.Melocus,chr){
-        options(warn = -1)
         colnames(overlapMe) <- c("snp","locus")
         realnums <- ratio.mat != "NA" & ratio.mat != "NaN"
         realNA <- colnames(ratio.mat)[realnums]
@@ -118,7 +117,10 @@ MEsQTLFinder <- function(ASdb=NULL,Total.Medata=NULL,Total.Melocus=NULL,
             }
             if (any(length(pa.result))){
                 colnames(pa.result)[1] <- "MeID"
+                if (is.element("p.ma",colnames(pa.result))){
+                    colnames(pa.result)[ncol(pa.result)] <- "pByMet"
                 }
+            }
         }
         return (pa.result)
     }
