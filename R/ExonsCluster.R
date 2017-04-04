@@ -215,7 +215,6 @@ ExonsCluster <- function(ASdb,GTFdb,Ncor=1){
         final.result <- rbind(A5SS.f.result,A3SS.f.result)
         return (final.result)
     }
-    
     ES.Alt.result <- function(altSplice){
         ES.merge.f <- function(ES.result,Alt.type){
             firstEX <- strsplit(ES.result[,"1stEX"],"-")
@@ -404,7 +403,6 @@ ExonsCluster <- function(ASdb,GTFdb,Ncor=1){
         }
     return (final.result)
     }
-    GTFdb <- chrseparate(GTFdb,1:22)
     registerDoParallel(cores=Ncor)
     trans.intron.range <- intronsByTranscript(GTFdb)
     tx.cns <- c("TXCHROM","TXNAME","GENEID","TXSTART","TXEND","TXSTRAND")
