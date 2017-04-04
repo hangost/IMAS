@@ -136,86 +136,8 @@ ExonsCluster <- function(ASdb,GTFdb,Ncor=1){
         }
         return (final.mat)
     }
-    ASS.Alt.result <- function(altSplice){
-        mer.Ex <- function(Ex.mat,std.lo,Alt.type){
-            test.re <- NULL
-            merged.mat <- tapply(Ex.mat,std.lo,function(total.sem){
-                sem <- do.call(rbind,strsplit(total.sem,"-"))
-                colnames(sem) <- c("start","end")
-                merge.des <- paste(sort(total.sem),collapse=",")
-                order.lo <- order(as.double(sem[,"start"]))
-                test.re <- cbind(rbind(sem[order.lo[1],]),rbind(merge.des))
-                test.re
-            })
-            return (do.call(rbind,merged.mat))
-        }
-        ASS.merge.f <- function(ASS.result,Alt.type){
-            neig.nm <- grep("Neighbor_des",colnames(ASS.result))
-            neig.nm <- colnames(ASS.result)[neig.nm]
-            s.Short.EX <- strsplit(ASS.result[,"ShortEX"],"-")
-            s.long.EX <- strsplit(ASS.result[,"LongEX"],"-")
-            Short.EX <- unique(do.call(rbind,s.Short.EX))
-            long.EX <- unique(do.call(rbind,s.long.EX))
-            colnames(Short.EX) <- c("start","end")
-            colnames(long.EX) <- c("start","end")
-            total.EX <- rbind(Short.EX,long.EX)
-            t.st <- as.integer(total.EX[,"start"])
-            t.en <- as.integer(total.EX[,"end"])
-            each.ranges <- IRanges(start=t.st,end=t.en)
-            total.EX.ranges <- GRanges(seqnames="*",ranges=each.ranges)
-            Short.EX <- unlist(strsplit(ASS.result[,"Short_des"],","))
-            Short.EX <- strsplit(Short.EX,"-")
-            Short.EX <- unique(do.call(rbind,Short.EX))
-            long.EX <- unlist(strsplit(ASS.result[,"Long_des"],","))
-            long.EX <- strsplit(long.EX,"-")
-            long.EX <- unique(do.call(rbind,long.EX))
-            neighbor.EX <- unlist(strsplit(ASS.result[,neig.nm],","))
-            neighbor.EX <- strsplit(neighbor.EX,"-")
-            neighbor.EX <- unique(do.call(rbind,neighbor.EX))
-            colnames(Short.EX) <- c("start","end")
-            colnames(long.EX) <- c("start","end")
-            colnames(neighbor.EX) <- c("start","end")
-            s.pa.ex.mat <- paste(Short.EX[,"start"],Short.EX[,"end"],sep="-")
-            l.pa.ex.mat <- paste(long.EX[,"start"],long.EX[,"end"],sep="-")
-            if (Alt.type == "A5SS"){
-                A5.num <- altSplice[,"Types"] == "A5SS"
-                A5.re <- rbind(altSplice[A5.num,])
-                short.m <- mer.Ex(s.pa.ex.mat,Short.EX[,"end"],"A5SS")
-                long.m <- mer.Ex(l.pa.ex.mat,long.EX[,"end"],"A5SS")
-            }
-            else if(Alt.type == "A3SS"){
-                A3.num <- altSplice[,"Types"] == "A3SS"
-                A3.re <- rbind(altSplice[A3.num,])
-                short.m <- mer.Ex(s.pa.ex.mat,Short.EX[,"start"],"A3SS")
-                long.m <- mer.Ex(l.pa.ex.mat,long.EX[,"start"],"A3SS")
-            }
-            p.n.E <- paste(neighbor.EX[,"start"],neighbor.EX[,"end"],sep="-")
-            neighbor.ex.merge <- cbind(neighbor.EX,p.n.E)
-            colnames(neighbor.ex.merge) <- c("start","end","des")
-            colnames(short.m) <- c("start","end","des")
-            colnames(long.m) <- c("start","end","des")
-            ASS.final.result <- cbind(merge.mat(short.m,
-                long.m,neighbor.ex.merge,Alt.type),Alt.type)
-            cn <- c("ShortEX","LongEX","NeighborEX","Short_des","Long_des",
-                "Neighbor_des","splicing in 1EX","splicing in 2EX","Types")
-            colnames(ASS.final.result) <- cn
-            return (ASS.final.result)
-        }
-        ASS.final.result <- NULL
-        merged.mat <- NULL
-        test.pos.re <- NULL
-        A5.num <- altSplice[,"Types"] == "A5SS"
-        A3.num <- altSplice[,"Types"] == "A3SS"
-        if (is.element("TRUE",A5.num)){
-            A5SS.f.result <- ASS.merge.f(rbind(altSplice[A5.num,]),"A5SS")
-        }
-        if (is.element("TRUE",A3.num)){
-            A3SS.f.result <- ASS.merge.f(rbind(altSplice[A3.num,]),"A3SS")
-        }
-        final.result <- rbind(A5SS.f.result,A3SS.f.result)
-        return (final.result)
-    }
-    ES.Alt.result <- function(altSplice){
+    
+    ES.Alt.result <-function(altSplice){
         ES.merge.f <- function(ES.result,Alt.type){
             firstEX <- strsplit(ES.result[,"1stEX"],"-")
             firstEX <- unique(do.call(rbind,firstEX))
@@ -314,6 +236,86 @@ ExonsCluster <- function(ASdb,GTFdb,Ncor=1){
         final.result <- rbind(fi.ES.re,se.ES.re,mxe.ES.re)
         return (final.result)
     }
+    
+    ASS.Alt.result <- function(altSplice){
+        mer.Ex <- function(Ex.mat,std.lo,Alt.type){
+            test.re <- NULL
+            merged.mat <- tapply(Ex.mat,std.lo,function(total.sem){
+                sem <- do.call(rbind,strsplit(total.sem,"-"))
+                colnames(sem) <- c("start","end")
+                merge.des <- paste(sort(total.sem),collapse=",")
+                order.lo <- order(as.double(sem[,"start"]))
+                test.re <- cbind(rbind(sem[order.lo[1],]),rbind(merge.des))
+                test.re
+            })
+            return (do.call(rbind,merged.mat))
+        }
+        ASS.merge.f <- function(ASS.result,Alt.type){
+            neig.nm <- grep("Neighbor_des",colnames(ASS.result))
+            neig.nm <- colnames(ASS.result)[neig.nm]
+            s.Short.EX <- strsplit(ASS.result[,"ShortEX"],"-")
+            s.long.EX <- strsplit(ASS.result[,"LongEX"],"-")
+            Short.EX <- unique(do.call(rbind,s.Short.EX))
+            long.EX <- unique(do.call(rbind,s.long.EX))
+            colnames(Short.EX) <- c("start","end")
+            colnames(long.EX) <- c("start","end")
+            total.EX <- rbind(Short.EX,long.EX)
+            t.st <- as.integer(total.EX[,"start"])
+            t.en <- as.integer(total.EX[,"end"])
+            each.ranges <- IRanges(start=t.st,end=t.en)
+            total.EX.ranges <- GRanges(seqnames="*",ranges=each.ranges)
+            Short.EX <- unlist(strsplit(ASS.result[,"Short_des"],","))
+            Short.EX <- strsplit(Short.EX,"-")
+            Short.EX <- unique(do.call(rbind,Short.EX))
+            long.EX <- unlist(strsplit(ASS.result[,"Long_des"],","))
+            long.EX <- strsplit(long.EX,"-")
+            long.EX <- unique(do.call(rbind,long.EX))
+            neighbor.EX <- unlist(strsplit(ASS.result[,neig.nm],","))
+            neighbor.EX <- strsplit(neighbor.EX,"-")
+            neighbor.EX <- unique(do.call(rbind,neighbor.EX))
+            colnames(Short.EX) <- c("start","end")
+            colnames(long.EX) <- c("start","end")
+            colnames(neighbor.EX) <- c("start","end")
+            s.pa.ex.mat <- paste(Short.EX[,"start"],Short.EX[,"end"],sep="-")
+            l.pa.ex.mat <- paste(long.EX[,"start"],long.EX[,"end"],sep="-")
+            if (Alt.type == "A5SS"){
+                A5.num <- altSplice[,"Types"] == "A5SS"
+                A5.re <- rbind(altSplice[A5.num,])
+                short.m <- mer.Ex(s.pa.ex.mat,Short.EX[,"end"],"A5SS")
+                long.m <- mer.Ex(l.pa.ex.mat,long.EX[,"end"],"A5SS")
+            }
+            else if(Alt.type == "A3SS"){
+                A3.num <- altSplice[,"Types"] == "A3SS"
+                A3.re <- rbind(altSplice[A3.num,])
+                short.m <- mer.Ex(s.pa.ex.mat,Short.EX[,"start"],"A3SS")
+                long.m <- mer.Ex(l.pa.ex.mat,long.EX[,"start"],"A3SS")
+            }
+            p.n.E <- paste(neighbor.EX[,"start"],neighbor.EX[,"end"],sep="-")
+            neighbor.ex.merge <- cbind(neighbor.EX,p.n.E)
+            colnames(neighbor.ex.merge) <- c("start","end","des")
+            colnames(short.m) <- c("start","end","des")
+            colnames(long.m) <- c("start","end","des")
+            ASS.final.result <- cbind(merge.mat(short.m,
+                long.m,neighbor.ex.merge,Alt.type),Alt.type)
+            cn <- c("ShortEX","LongEX","NeighborEX","Short_des","Long_des",
+                "Neighbor_des","splicing in 1EX","splicing in 2EX","Types")
+            colnames(ASS.final.result) <- cn
+            return (ASS.final.result)
+        }
+        ASS.final.result <- NULL
+        merged.mat <- NULL
+        test.pos.re <- NULL
+        A5.num <- altSplice[,"Types"] == "A5SS"
+        A3.num <- altSplice[,"Types"] == "A3SS"
+        if (is.element("TRUE",A5.num)){
+            A5SS.f.result <- ASS.merge.f(rbind(altSplice[A5.num,]),"A5SS")
+        }
+        if (is.element("TRUE",A3.num)){
+            A3SS.f.result <- ASS.merge.f(rbind(altSplice[A3.num,]),"A3SS")
+        }
+        final.result <- rbind(A5SS.f.result,A3SS.f.result)
+        return (final.result)
+    }
     IR.Alt.result <- function(altSplice){
         rm.alt.result <- NULL
         IR.result <- altSplice
@@ -379,7 +381,7 @@ ExonsCluster <- function(ASdb,GTFdb,Ncor=1){
             "Do_des","Up_des","Outter_splice","Inner_splice","Types")
         return (final.result)
     }
-    for.f <- function(Alt.mat,alt.gene,alt.type){
+    out.fun <- function(Alt.mat,alt.gene,alt.type){
         each.result <- NULL
         final.result <- foreach(alt.num=seq_along(alt.gene),
             .packages=called.packages,.combine=rbind) %dopar% {
@@ -439,7 +441,7 @@ ExonsCluster <- function(ASdb,GTFdb,Ncor=1){
     names(total.list) <- c("ES","ASS","IR")
     if(any(seq_along(ES.gene))){
         each.mat <- Alt.splice.result$ES
-        each.re <- for.f(each.mat,ES.gene,"ES")
+        each.re <- out.fun(each.mat,ES.gene,"ES")
         if (any(length(each.re))){
             rownames(each.re) <- seq_len(nrow(each.re))
             ES.nms <- paste("ES",seq_len(nrow(each.re)),sep="")
@@ -449,7 +451,7 @@ ExonsCluster <- function(ASdb,GTFdb,Ncor=1){
     }
     if(any(seq_along(ASS.gene))){
         each.mat <- Alt.splice.result$ASS
-        each.re <- for.f(each.mat,ASS.gene,"ASS")
+        each.re <- out.fun(each.mat,ASS.gene,"ASS")
         if (any(length(each.re))){
             rownames(each.re) <- seq_len(nrow(each.re))
             ASS.nms <- paste("ASS",seq_len(nrow(each.re)),sep="")
@@ -459,7 +461,7 @@ ExonsCluster <- function(ASdb,GTFdb,Ncor=1){
     }
     if(any(seq_along(IR.gene))){
         each.mat <- Alt.splice.result$IR
-        each.re <- for.f(each.mat,IR.gene,"IR")
+        each.re <- out.fun(each.mat,IR.gene,"IR")
         if (any(length(each.re))){
             rownames(each.re) <- seq_len(nrow(each.re))
             IR.nms <- paste("IR",seq_len(nrow(each.re)),sep="")
