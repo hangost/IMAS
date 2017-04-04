@@ -136,6 +136,30 @@ ExonsCluster <- function(ASdb,GTFdb,Ncor=1){
         }
         return (final.mat)
     }
+    out.fun <- function(Alt.mat,alt.gene,alt.type){
+        each.result <- NULL
+        final.result <- foreach(alt.num=seq_along(alt.gene),
+            .packages=called.packages,.combine=rbind) %dopar% {
+            over.num <- Alt.mat[,"EnsID"] == alt.gene[alt.num]
+            Alt.mat <- rbind(Alt.mat[over.num,])
+            if (alt.type == "ASS"){
+                each.result <- rbind(ASS.Alt.result(Alt.mat))
+            }
+            else if (alt.type == "ES"){
+                each.result <- rbind(ES.Alt.result(Alt.mat))
+            }
+            else if (alt.type == "IR"){
+                each.result <- rbind(IR.Alt.result(Alt.mat))
+            }
+            spl.nums <- grep("Spl|spl",colnames(each.result))
+            e.chr <- unique(Alt.mat[,"Nchr"])
+            each.result <- rbind(each.result[,-spl.nums])
+            each.result <- cbind(EnsID=alt.gene[alt.num],Nchr=e.chr,
+                Strand=unique(Alt.mat[,"Strand"]),each.result)
+            each.result
+            }
+        return (final.result)
+    }
     ASS.Alt.result <- function(altSplice){
         mer.Ex <- function(Ex.mat,std.lo,Alt.type){
             test.re <- NULL
@@ -362,7 +386,7 @@ ExonsCluster <- function(ASdb,GTFdb,Ncor=1){
         }
         fi.ES <- rbind(altSplice[altSplice[,"2ndEX"] == "NA",])
         se.ES <- rbind(altSplice[altSplice[,"2ndEX"] != "NA",])
-        se.ES <- rbind(altSplice[altSplice[,"Types"] == "ES",])
+        se.ES <- rbind(se.ES[se.ES[,"Types"] == "ES",])
         mxe.ES <- rbind(altSplice[altSplice[,"Types"] == "MXE",])
         fi.ES.re <- NULL
         se.ES.re <- NULL
@@ -377,30 +401,6 @@ ExonsCluster <- function(ASdb,GTFdb,Ncor=1){
             mxe.ES.re <- ES.merge.f(mxe.ES,"MXE")
         }
         final.result <- rbind(fi.ES.re,se.ES.re,mxe.ES.re)
-        return (final.result)
-    }
-    out.fun <- function(Alt.mat,alt.gene,alt.type){
-        each.result <- NULL
-        final.result <- foreach(alt.num=seq_along(alt.gene),
-            .packages=called.packages,.combine=rbind) %dopar% {
-            over.num <- Alt.mat[,"EnsID"] == alt.gene[alt.num]
-            Alt.mat <- rbind(Alt.mat[over.num,])
-            if (alt.type == "ES"){
-                each.result <- rbind(ES.Alt.result(Alt.mat))
-            }
-            else if (alt.type == "ASS"){
-                each.result <- rbind(ASS.Alt.result(Alt.mat))
-            }
-            else if (alt.type == "IR"){
-                each.result <- rbind(IR.Alt.result(Alt.mat))
-            }
-            spl.nums <- grep("Spl|spl",colnames(each.result))
-            e.chr <- unique(Alt.mat[,"Nchr"])
-            each.result <- rbind(each.result[,-spl.nums])
-            each.result <- cbind(EnsID=alt.gene[alt.num],Nchr=e.chr,
-                Strand=unique(Alt.mat[,"Strand"]),each.result)
-            each.result
-            }
         return (final.result)
     }
     registerDoParallel(cores=Ncor)
@@ -472,6 +472,3 @@ ExonsCluster <- function(ASdb,GTFdb,Ncor=1){
         Me.sQTLs=ASdb@"Me.sQTLs",Clinical=ASdb@"Clinical")
     return (ASdb)
 }
-
-
-
