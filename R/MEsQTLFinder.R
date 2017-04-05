@@ -55,6 +55,7 @@ MEsQTLFinder <- function(ASdb=NULL,Total.Medata=NULL,Total.Melocus=NULL,
         else    colnames(stac.result) <- c("Meid","pByMet","met")
         return    (stac.result)
     }
+    sigEnv <- environment(CalSigMe)
     TestMe <- function(Each.mat){
         if (ncol(Each.mat) == 1)    return (NULL)
         subn <- is.element(Total.Melocus[,"CHR"],unique(Each.mat[,"Nchr"]))
@@ -97,7 +98,7 @@ MEsQTLFinder <- function(ASdb=NULL,Total.Medata=NULL,Total.Melocus=NULL,
                         rownames(te.Meda) <- int.Me
                         on <- is.element(sub.Melo[,"Methyl"],overMe[,"snp"])
                         te.Melo <- rbind(sub.Melo[on,])
-                        sig.re <- CalSigMe(test.exp,te.Meda,overMe,
+                        sig.re <- sigEnv$CalSigMe(test.exp,te.Meda,overMe,
                             te.Melo,test.mat[,"Nchr"])
                         if (any(seq_len(length(sig.re)))){
                             nsi <- nrow(sig.re)
@@ -142,8 +143,6 @@ MEsQTLFinder <- function(ASdb=NULL,Total.Medata=NULL,Total.Melocus=NULL,
         each.result <- cbind(each.result[,p.num.ra],fd.mat)
         return (each.result)
     }
-    sigEnv <- environment(CalSigMe)
-    CalSigMe <- sigEnv$CalSigMe
     na.mat <- as.matrix("NA")
     registerDoParallel(cores=Ncor)
     called.packages <- c("lme4","GenomicRanges","GenomicFeatures")

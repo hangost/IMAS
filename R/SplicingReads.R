@@ -7,6 +7,7 @@ SplicingReads <- function(bamfile=NULL,test.exon=NULL,spli.jun=NULL,
         names(ex.reads) <- names(t.reads)
         return (ex.reads)
     }
+    CoverEnv <- environment(ReadCover)
     N.test <- function(Nreads){
         p.se.nms <- paste(names(Nreads),elementMetadata(Nreads)[,"seq"])
         t.p.se.nms <- table(p.se.nms)
@@ -14,7 +15,7 @@ SplicingReads <- function(bamfile=NULL,test.exon=NULL,spli.jun=NULL,
         nm.t <- names(t.p.se.nms)[nums.t]
         nm.t <- which(is.element(t.p.se.nms,nums.t) == TRUE)
         Nreads <- Nreads[nm.t,]
-        Nco <- ReadCover(Nreads)
+        Nco <- CoverEnv$ReadCover(Nreads)
         spliInfo <- lapply(Nco,function(ea.re){
             st <- sort(start(ea.re))[-1]
             en <- sort(end(ea.re))[-length(ea.re)]
@@ -39,7 +40,7 @@ SplicingReads <- function(bamfile=NULL,test.exon=NULL,spli.jun=NULL,
         names(ov.E.r) <- p.ex[as.integer(names(ov.E.r))]
         return (ov.E.r)
     }
-    
+    exEnv <- environment(ex.test)
     pa.test <- function(Preads){
         count.reads <- function(bet.num){
             fi.nums <- over.mat[,"subjectHits"] == bet.num[1]
@@ -67,12 +68,12 @@ SplicingReads <- function(bamfile=NULL,test.exon=NULL,spli.jun=NULL,
             names(f.li) <- c(in1.nm,in2.nm,sk.nm)
             return (f.li)
         }
-        Pco <- ReadCover(Preads)
+        Pco <- CoverEnv$ReadCover(Preads)
         Pco.Gran <- GRanges("*",unlist(Pco))
         over.mat <- findOverlaps(Pco.Gran,Ex.range)
         over.mat <- as.matrix(over.mat)
         if (readsinfo == "exon"){
-            ex.re <- ex.test(Pco.Gran,over.mat,NULL)
+            ex.re <- exEnv$ex.test(Pco.Gran,over.mat,NULL)
             return (ex.re)
         }
         in.mat <- rbind(c(1,2),c(2,3))
@@ -89,7 +90,7 @@ SplicingReads <- function(bamfile=NULL,test.exon=NULL,spli.jun=NULL,
             pre.re <- apply(cbind(pre.re,pre.re2,pre.re3),1
                 ,function(x) unname(unlist(x)))
         }
-        ex.re <- ex.test(Pco.Gran,over.mat,pre.re)
+        ex.re <- exEnv$ex.test(Pco.Gran,over.mat,pre.re)
         pre.re <- sapply(pre.re,function(x)    length(x))
         f.re <- list(pre.re,ex.re)
         names(f.re) <- c("pairedInfo","exonInfo")
@@ -108,10 +109,6 @@ SplicingReads <- function(bamfile=NULL,test.exon=NULL,spli.jun=NULL,
         total.spli.sites <- unique(do.call(rbind,strsplit(spli.jun,"-")))
         colnames(total.spli.sites) <- c("start","end")
     }
-    CoverEnv <- environment(ReadCover)
-    exEnv <- environment(ex.test)
-    ReadCover <- CoverEnv$ReadCover
-    ex.test <- exEnv$ex.test
     final.re <- list(NULL,NULL,NULL)
     names(final.re) <- c("pairedInfo","exonInfo","junctionInfo")
     I.ran <- IRanges(min(as.integer(e.ran)),max(as.integer(e.ran)))

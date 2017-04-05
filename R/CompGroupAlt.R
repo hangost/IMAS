@@ -35,7 +35,6 @@ CompGroupAlt <- function(ASdb=NULL,GroupSam=NULL,Ncor=1,
         return (ratio.mat)
     }
     sigEnv <- environment(CalsigGroup)
-    CalsigGroup <- sigEnv$CalsigGroup
     A.groups <- GroupSam$"GroupA"
     B.groups <- GroupSam$"GroupB"
     each.nums <- NULL
@@ -54,7 +53,7 @@ CompGroupAlt <- function(ASdb=NULL,GroupSam=NULL,Ncor=1,
                 each.ratio.mat <- rbind(each.ratio.mat[cal.num,])
             }
             if (length(each.ratio.mat)){
-                each.p.result <- CalsigGroup(each.ratio.mat)
+                each.p.result <- sigEnv$CalsigGroup(each.ratio.mat)
                 real.num <- each.p.result[,"Diff.P"] != "NA"
                 each.p.result <- rbind(each.p.result[real.num,])
                 inter.cn <- c("Index","EnsID","Strand","Nchr",

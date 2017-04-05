@@ -170,7 +170,8 @@ RatioFromReads <- function(ASdb=NULL,Total.bamfiles=NULL,readsInfo=
             }
         return (group.1.2.ratio)
     }
-
+    splitEnv <- environment(splitSplice)
+    coorEnv <- environment(coorEX)
     Each.Cal.ratio <- function(bamfiles=NULL,splicingInfo=NULL){
         ExReads <- function(t.ex,t.sp,g.e1,g.e2,g1,g2,s1,s2,ch,er,met,alt){
             coor.re <- NULL
@@ -183,7 +184,7 @@ RatioFromReads <- function(ASdb=NULL,Total.bamfiles=NULL,readsInfo=
                 names(group.2.list) <- c("paired","exon","junction")
                 t.g.li <- list(group.1.list,group.2.list)
                 names(t.g.li) <- c("Inclu","Skip")
-                coor.re <- coorEX(T.r,t.g.li,readLen,inserSize,minr,alt)
+                coor.re <- coorEnv$coorEX(T.r,t.g.li,readLen,inserSize,minr,alt)
                 coor.re
             })
         pre.bam.re <- do.call(cbind,pre.bam.re)    
@@ -221,10 +222,10 @@ RatioFromReads <- function(ASdb=NULL,Total.bamfiles=NULL,readsInfo=
                     se.pr <- paste(ES.re[,c("1stEX","UpEX")],collapse="~")
                     g.1.p <- rbind(fi.pr,se.pr)
                     g.2.p <- paste(ES.re[,c("DownEX","UpEX")],collapse="~")
-                    fi.s1 <- splitSplice(ES.re[,"Do_des"],ES.re[,"1st_des"])
-                    fi.s2 <- splitSplice(ES.re[,"1st_des"],ES.re[,"Up_des"])
+                    fi.s1 <- splitEnv$splitSplice(ES.re[,"Do_des"],ES.re[,"1st_des"])
+                    fi.s2 <- splitEnv$splitSplice(ES.re[,"1st_des"],ES.re[,"Up_des"])
                     g.1.s <- c(fi.s1,fi.s2)
-                    g.2.s <- splitSplice(ES.re[,"Do_des"],ES.re[,"Up_des"])
+                    g.2.s <- splitEnv$splitSplice(ES.re[,"Do_des"],ES.re[,"Up_des"])
                     t.ex <- ES.re[,c("DownEX","1stEX","UpEX")]
                     t.sp <- c(g.1.s,g.2.s)
                     e.chr <- unique(ES.re[,"Nchr"])
@@ -252,11 +253,11 @@ RatioFromReads <- function(ASdb=NULL,Total.bamfiles=NULL,readsInfo=
                     th.pr <- paste(ES.re[,c("2ndEX","UpEX")],collapse="~")
                     g.1.p <- rbind(fi.pr,se.pr,th.pr)
                     g.2.p <- paste(ES.re[,c("DownEX","UpEX")],collapse="~")
-                    fi.s1 <- splitSplice(ES.re[,"Do_des"],ES.re[,"1st_des"])
-                    fis2 <- splitSplice(ES.re[,"1st_des"],ES.re[,"2nd_des"])
-                    fi.s3 <- splitSplice(ES.re[,"2nd_des"],ES.re[,"Up_des"])
+                    fi.s1 <- splitEnv$splitSplice(ES.re[,"Do_des"],ES.re[,"1st_des"])
+                    fis2 <- splitEnv$splitSplice(ES.re[,"1st_des"],ES.re[,"2nd_des"])
+                    fi.s3 <- splitEnv$splitSplice(ES.re[,"2nd_des"],ES.re[,"Up_des"])
                     g.1.s <- c(fi.s1,fis2,fi.s3)
-                    g.2.s <- splitSplice(ES.re[,"Do_des"],ES.re[,"Up_des"])
+                    g.2.s <- splitEnv$splitSplice(ES.re[,"Do_des"],ES.re[,"Up_des"])
                     t.sp <- c(g.1.s,g.2.s)
                     t.ex <- c(ES.re[,"DownEX"],ES.re[,"1stEX"],
                         ES.re[,"2ndEX"],ES.re[,"UpEX"])
@@ -286,10 +287,10 @@ RatioFromReads <- function(ASdb=NULL,Total.bamfiles=NULL,readsInfo=
                     se.p.2 <- paste(ES.re[,c("2ndEX","UpEX")],collapse="~")
                     g.1.p <- rbind(fi.p.1,se.p.1)
                     g.2.p <- rbind(fi.p.2,se.p.2)
-                    fi.s1 <- splitSplice(ES.re[,"Do_des"],ES.re[,"1st_des"])
-                    fi.s2 <- splitSplice(ES.re[,"1st_des"],ES.re[,"Up_des"])
-                    se.s1 <- splitSplice(ES.re[,"Do_des"],ES.re[,"2nd_des"])
-                    se.s2 <- splitSplice(ES.re[,"2nd_des"],ES.re[,"Up_des"])
+                    fi.s1 <- splitEnv$splitSplice(ES.re[,"Do_des"],ES.re[,"1st_des"])
+                    fi.s2 <- splitEnv$splitSplice(ES.re[,"1st_des"],ES.re[,"Up_des"])
+                    se.s1 <- splitEnv$splitSplice(ES.re[,"Do_des"],ES.re[,"2nd_des"])
+                    se.s2 <- splitEnv$splitSplice(ES.re[,"2nd_des"],ES.re[,"Up_des"])
                     g.1.s <- c(fi.s1,fi.s2)
                     g.2.s <- c(se.s1,se.s2)
                     t.sp <- c(g.1.s,g.2.s)
@@ -334,7 +335,7 @@ RatioFromReads <- function(ASdb=NULL,Total.bamfiles=NULL,readsInfo=
                 fi.pr.2 <- paste(c(ea.re[,"DownEX"],ex.sp),collapse="~")
                 se.pr.2 <- paste(c(ex.sp,IR.re[,"UpEX"]),collapse="~")
                 g.2.p <- rbind(fi.pair.2,se.pair.2)
-                g.1.s <- c(splitSplice(ea.re[,"Do_des"],ea.re[,"Up_des"]))
+                g.1.s <- c(splitEnv$splitSplice(ea.re[,"Do_des"],ea.re[,"Up_des"]))
                 g.2.s <- "NA"
                 t.ex <- c(ea.re[,"DownEX"],ex.sp,ea.re[,"UpEX"])
                 e.chr <- unique(ea.re[,"Nchr"])
@@ -384,8 +385,8 @@ RatioFromReads <- function(ASdb=NULL,Total.bamfiles=NULL,readsInfo=
                     names(ASS.sp) <- "Alt.ex"
                     g.2.p <- c(ea.re[,"ShortEX"],sh.nei)
                     g.2.p <- rbind(paste(g.2.p,collapse="~"))
-                    g.1.s <- c(splitSplice(ea.re[,"Long_des"],lo.des))
-                    g.2.s <- c(splitSplice(ea.re[,"Short_des"],sh.des))
+                    g.1.s <- c(splitEnv$splitSplice(ea.re[,"Long_des"],lo.des))
+                    g.2.s <- c(splitEnv$splitSplice(ea.re[,"Short_des"],sh.des))
                     g.1.e <- c(ASS.sp,sh.nei)
                     g.2.e <- c(ASS.sp,lo.nei)
                     t.ex <- c(ASS.sp,lo.nei)
@@ -397,8 +398,8 @@ RatioFromReads <- function(ASdb=NULL,Total.bamfiles=NULL,readsInfo=
                     names(ASS.sp) <- "Alt.ex"
                     g.2.p <- c(sh.nei,ea.re[,"ShortEX"])
                     g.2.p <- rbind(paste(g.2.p,collapse="~"))
-                    g.1.s <- c(splitSplice(lo.des,ea.re[,"Long_des"]))
-                    g.2.s <- c(splitSplice(sh.des,ea.re[,"Short_des"]))
+                    g.1.s <- c(splitEnv$splitSplice(lo.des,ea.re[,"Long_des"]))
+                    g.2.s <- c(splitEnv$splitSplice(sh.des,ea.re[,"Short_des"]))
                     g.1.e <- c(sh.nei,ASS.sp)
                     g.2.e <- c(lo.nei,ASS.sp)
                     t.ex <- c(lo.nei,ASS.sp)
@@ -424,10 +425,6 @@ RatioFromReads <- function(ASdb=NULL,Total.bamfiles=NULL,readsInfo=
         names(final.re) <- c("ES","ASS","IR")
         return (final.re)
     }
-    splitEnv <- environment(splitSplice)
-    coorEnv <- environment(coorEX)
-    splitSplice <- splitEnv$splitSplice
-    coorEX <- coorEnv$coorEX
     ea.re <- NULL
     ES.num <- NULL
     IR.num <- NULL

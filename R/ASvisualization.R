@@ -1,6 +1,17 @@
 ASvisualization <- function(ASdb,CalIndex=NULL,txTable=NULL,exon.range=NULL,
     snpdata=NULL,snplocus=NULL,methyldata=NULL,methyllocus=NULL,GroupSam=NULL,
     ClinicalInfo=NULL,out.dir=NULL){
+    p.round <- function(p.val.mat){
+        p.val.mat <- unlist(lapply(p.val.mat,function(each.p){
+            if (length(grep("e",each.p))){
+                each.p <- unlist(strsplit(as.character(each.p),"e"))
+                paste(round(as.double(each.p[1]),4),"e",each.p[2],sep="")
+            }
+            else round(as.double(each.p),4)
+        }))
+        return (p.val.mat)
+    }
+    PEnv <- environment(p.round)
     BoxforGroup <- function(te.gro,te.ra){
         A.nums <- is.element(colnames(te.ra),GroupSam$"GroupA")
         B.nums <- is.element(colnames(te.ra),GroupSam$"GroupB")
@@ -12,7 +23,7 @@ ASvisualization <- function(ASdb,CalIndex=NULL,txTable=NULL,exon.range=NULL,
         T.exp <- data.frame(A.B.exp,A.B.groups)
         p.nums <- is.element(colnames(te.gro),c("Diff.P","Fdr.p"))
         p.val.mat <- te.gro[,p.nums]
-        te.gro[,p.nums] <- p.round(p.val.mat)
+        te.gro[,p.nums] <- PEnv$p.round(p.val.mat)
         text.box <- rbind(te.gro[,c("Index","EnsID","Diff.P","Fdr.p")])
         colnames(T.exp) <- c("Ratio","Groups")
         gplot.result <- ggplot(data=T.exp,aes(x=Groups,y=Ratio,fill=Groups))+
@@ -37,7 +48,7 @@ ASvisualization <- function(ASdb,CalIndex=NULL,txTable=NULL,exon.range=NULL,
             text.box <- rbind(each.result[,ov.cn])
             p.val.nums <- is.element(colnames(text.box),p.cn)
             p.val.mat <- text.box[,p.val.nums]
-            p.val.mat <- p.round(p.val.mat)
+            p.val.mat <- PEnv$p.round(p.val.mat)
             text.box[,p.val.nums] <- p.val.mat
             G.test <- which(names(text.box) == "OR")
             if (!any(G.test)){
@@ -96,8 +107,6 @@ ASvisualization <- function(ASdb,CalIndex=NULL,txTable=NULL,exon.range=NULL,
         names(snpplots.re) <- rownames(test.snp.mat)
         return (snpplots.re)
     }
-    
-    
     BoxforMe <- function(test.Me.mat,test.ratio){
         MeExp <- NULL
         cn.ratio <- colnames(test.ratio)
@@ -115,7 +124,7 @@ ASvisualization <- function(ASdb,CalIndex=NULL,txTable=NULL,exon.range=NULL,
             colnames(me.ratio) <- c("Ra","Me")
             text.box <- each.mat[,is.element(colnames(each.mat),tb.cn)]
             p.nums <- grep("pBy|fdrBy",names(text.box))
-            text.box[p.nums] <- p.round(text.box[p.nums])
+            text.box[p.nums] <- PEnv$p.round(text.box[p.nums])
             rownames(text.box) <- NULL
             G.test <- which(names(text.box) == "pByGroups")
             if (!any(G.test)){
@@ -173,23 +182,13 @@ ASvisualization <- function(ASdb,CalIndex=NULL,txTable=NULL,exon.range=NULL,
         p.m <- c("Pvalue","Fdr.p")
         ov.nm <- is.element(colnames(ClinicalAnal),iep.m)
         text.box <- ClinicalAnal[,ov.nm]
-        text.box[p.m] <- p.round(text.box[p.m])
+        text.box[p.m] <- PEnv$p.round(text.box[p.m])
         clinic.plots <- ClinicAnalysis(ASdb,ClinicalInfo,display=TRUE,
             CalIndex=each.index,out.dir=NULL)
         clinic.plots <- list(plot=clinic.plots,text=rbind(text.box))
         return (clinic.plots)
     }
     
-    p.round <- function(p.val.mat){
-        p.val.mat <- unlist(lapply(p.val.mat,function(each.p){
-            if (length(grep("e",each.p))){
-                each.p <- unlist(strsplit(as.character(each.p),"e"))
-                paste(round(as.double(each.p[1]),4),"e",each.p[2],sep="")
-            }
-            else round(as.double(each.p),4)
-        }))
-        return (p.val.mat)
-    }
     omics.test <- function(t.sQTLs,t.lo,types){
         adj.gran <- NULL
         omic.mat <- NULL
@@ -330,11 +329,7 @@ ASvisualization <- function(ASdb,CalIndex=NULL,txTable=NULL,exon.range=NULL,
         }
         return (pre.re)
     }
-
-    PEnv <- environment(p.round)
-    p.round <- PEnv$p.round
     adjEnv <- environment(adjFun)
-    adjFun <- adjEnv$adjFun
     Ratio <- NULL
     Groups <- NULL
     Genotype <- NULL
@@ -528,7 +523,7 @@ ASvisualization <- function(ASdb,CalIndex=NULL,txTable=NULL,exon.range=NULL,
     final.re <- NULL
     each.re <- NULL
     final.re <- lapply(seq_len(nrow(allcomb)),function(ea.nm){
-        each.re <- adjFun(ea.nm,allcomb)
+        each.re <- adjEnv$adjFun(ea.nm,allcomb)
         each.re
     })
     final.re <- do.call(rbind,final.re)

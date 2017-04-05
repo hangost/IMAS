@@ -45,6 +45,7 @@ ClinicAnalysis <- function(ASdb,ClinicalInfo=NULL,CalIndex=NULL,
         }
         return(pv)
     }
+    kmEnv <- environment(kmsur)
     p.cal <- function(test.mat){
         ea.re <- test.mat
         total.p <- foreach(each.num=seq_len(nrow(ea.re)),
@@ -57,7 +58,7 @@ ClinicAnalysis <- function(ASdb,ClinicalInfo=NULL,CalIndex=NULL,
             ea.ra <- ea.ra[ov.sam]
             sub.Cl <- rbind(ClinicalInfo[ov.sam,])
             if (length(ov.sam) > as.integer(t.sam/3)){
-                Pv <- kmsur(sub.Cl,ea.ra)
+                Pv <- kmEnv$kmsur(sub.Cl,ea.ra)
                 if (display)    Pv
                 else    rbind(c(p.r,Pv))
             }
@@ -69,8 +70,6 @@ ClinicAnalysis <- function(ASdb,ClinicalInfo=NULL,CalIndex=NULL,
         }
         return (total.p)
     }
-    kmEnv <- environment(kmsur)
-    kmsur <- kmEnv$kmsur
     each.num <- NULL
     registerDoParallel(cores=Ncor) 
     Exon.ratio.mat <- list(as.matrix("NA"),as.matrix("NA"),as.matrix("NA"))
