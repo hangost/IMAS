@@ -136,31 +136,15 @@ ExonsCluster <- function(ASdb,GTFdb,Ncor=1){
         }
         return (final.mat)
     }
-    out.fun <- function(Alt.mat,alt.gene,alt.type){
-        each.result <- NULL
-        final.result <- foreach(alt.num=seq_along(alt.gene),
-            .packages=called.packages,.combine=rbind) %dopar% {
-                over.num <- Alt.mat[,"EnsID"] == alt.gene[alt.num]
-                Alt.mat <- rbind(Alt.mat[over.num,])
-                if (alt.type == "ASS"){
-                    each.result <- rbind(ASS.Alt.result(Alt.mat))
-                }
-                else if (alt.type == "ES"){
-                    each.result <- rbind(ES.Alt.result(Alt.mat))
-                }
-                else if (alt.type == "IR"){
-                    each.result <- rbind(IR.Alt.result(Alt.mat))
-                }
-                spl.nums <- grep("Spl|spl",colnames(each.result))
-                e.chr <- unique(Alt.mat[,"Nchr"])
-                each.result <- rbind(each.result[,-spl.nums])
-                each.result <- cbind(EnsID=alt.gene[alt.num],Nchr=e.chr,
-                    Strand=unique(Alt.mat[,"Strand"]),each.result)
-                each.result
-            }
-        return (final.result)
+    out.fun <- function(each.result,alt.type){
+        spl.nums <- grep("Spl|spl",colnames(each.result))
+        each.result <- rbind(each.result[,-spl.nums])
+        rownames(each.result) <- seq_len(nrow(each.result))
+        ES.nms <- paste("ES",seq_len(nrow(each.re)),sep="")
+        each.result <- cbind(Index=ES.nms,each.result)
+        return (each.result)
     }
-    ASS.Alt.result <- function(altSplice){
+    ASSAltTe <- function(altSplice){
         mer.Ex <- function(Ex.mat,std.lo,Alt.type){
             test.re <- NULL
             merged.mat <- tapply(Ex.mat,std.lo,function(total.sem){
@@ -239,7 +223,7 @@ ExonsCluster <- function(ASdb,GTFdb,Ncor=1){
         final.result <- rbind(A5SS.f.result,A3SS.f.result)
         return (final.result)
     }
-    IR.Alt.result <- function(altSplice){
+    IRAltTe <- function(altSplice){
         rm.alt.result <- NULL
         IR.result <- altSplice
         Do.test.ex <- altSplice[,"DownEX"]
@@ -304,7 +288,7 @@ ExonsCluster <- function(ASdb,GTFdb,Ncor=1){
             "Do_des","Up_des","Outter_splice","Inner_splice","Types")
         return (final.result)
     }
-    ES.Alt.result <- function(altSplice){
+    ESAltTe <- function(altSplice){
         fi.ES.re <- NULL
         se.ES.re <- NULL
         mxe.ES.re <- NULL
@@ -412,6 +396,9 @@ ExonsCluster <- function(ASdb,GTFdb,Ncor=1){
     trans.intron.range <- unlist(trans.intron.range)
     called.packages <- c("GenomicRanges","GenomicFeatures")
     Alt.splice.result <- ASdb@SplicingModel
+    e.ge <- NULL
+    e.str <- NULL
+    e.chr <- NULL
     out.sd <- NULL
     in.sd <- NULL
     alt.num <- NULL
@@ -421,6 +408,7 @@ ExonsCluster <- function(ASdb,GTFdb,Ncor=1){
     ES.num <- NULL
     ASS.num <- NULL
     IR.num <- NULL
+    each.re <- NULL
     final.result <- NULL
     if (ncol(Alt.splice.result$ES) != 1){
         ES.gene <- unique(Alt.splice.result$ES[,"EnsID"])
@@ -439,31 +427,55 @@ ExonsCluster <- function(ASdb,GTFdb,Ncor=1){
     names(total.list) <- c("ES","ASS","IR")
     if(any(seq_along(ES.gene))){
         each.mat <- Alt.splice.result$ES
-        each.re <- out.fun(each.mat,ES.gene,"ES")
-        if (any(length(each.re))){
-            rownames(each.re) <- seq_len(nrow(each.re))
-            ES.nms <- paste("ES",seq_len(nrow(each.re)),sep="")
-            each.re <- cbind(Index=ES.nms,each.re)
+        each.re <- foreach(alt.num=seq_along(ES.gene),
+            .packages=called.packages,.combine=rbind) %dopar% {
+            over.num <- each.mat[,"EnsID"] == ES.gene[alt.num]
+            Alt.mat <- rbind(each.mat[over.num,])
+            e.ge <- unique(Alt.mat[,"EnsID"])
+            e.str <- unique(Alt.mat[,"Strand"])
+            e.chr <- unique(Alt.mat[,"Nchr"])
+            pre.re <- rbind(ESAltTe(Alt.mat))
+            pre.re <- cbind(EnsID=e.ge,Nchr=e.chr,Strand=e.str,pre.re)
+            pre.re
+        }
+        if (length(each.re)){
+            each.re <- out.fun(each.re,"ES")
             total.list$"ES" <- each.re
         }
-    }
+    }    
     if(any(seq_along(ASS.gene))){
         each.mat <- Alt.splice.result$ASS
-        each.re <- out.fun(each.mat,ASS.gene,"ASS")
-        if (any(length(each.re))){
-            rownames(each.re) <- seq_len(nrow(each.re))
-            ASS.nms <- paste("ASS",seq_len(nrow(each.re)),sep="")
-            each.re <- cbind(Index=ASS.nms,each.re)
+        each.re <- foreach(alt.num=seq_along(ASS.gene),
+            .packages=called.packages,.combine=rbind) %dopar% {
+            over.num <- each.mat[,"EnsID"] == ASS.gene[alt.num]
+            Alt.mat <- rbind(each.mat[over.num,])
+            e.ge <- unique(Alt.mat[,"EnsID"])
+            e.str <- unique(Alt.mat[,"Strand"])
+            e.chr <- unique(Alt.mat[,"Nchr"])
+            pre.re <- rbind(ASSAltTe(Alt.mat))
+            pre.re <- cbind(EnsID=e.ge,Nchr=e.chr,Strand=e.str,pre.re)
+            pre.re
+        }
+        if (length(each.re)){
+            each.re <- out.fun(each.re,"ASS")
             total.list$"ASS" <- each.re
         }
     }
     if(any(seq_along(IR.gene))){
         each.mat <- Alt.splice.result$IR
-        each.re <- out.fun(each.mat,IR.gene,"IR")
-        if (any(length(each.re))){
-            rownames(each.re) <- seq_len(nrow(each.re))
-            IR.nms <- paste("IR",seq_len(nrow(each.re)),sep="")
-            each.re <- cbind(Index=IR.nms,each.re)
+        each.re <- foreach(alt.num=seq_along(IR.gene),
+            .packages=called.packages,.combine=rbind) %dopar% {
+            over.num <- each.mat[,"EnsID"] == IR.gene[alt.num]
+            Alt.mat <- rbind(each.mat[over.num,])
+            e.ge <- unique(Alt.mat[,"EnsID"])
+            e.str <- unique(Alt.mat[,"Strand"])
+            e.chr <- unique(Alt.mat[,"Nchr"])
+            pre.re <- rbind(IRAltTe(Alt.mat))
+            pre.re <- cbind(EnsID=e.ge,Nchr=e.chr,Strand=e.str,pre.re)
+            pre.re
+        }
+        if (length(each.re)){
+            each.re <- out.fun(each.re,"IR")
             total.list$"IR" <- each.re
         }
     }
