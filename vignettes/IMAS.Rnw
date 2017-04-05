@@ -273,10 +273,6 @@ Expected survival outcomes of two groups, expressing high and low PSIs, are plot
 sessionInfo()
 @
 
-\section{Cleanup}
-<<closeConnetions,results=hide, echo=FALSE>>=
-closeAllConnections()
-@
 
 \begin{thebibliography}{9}
 
