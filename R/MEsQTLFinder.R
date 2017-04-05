@@ -57,8 +57,10 @@ MEsQTLFinder <- function(ASdb=NULL,Total.Medata=NULL,Total.Melocus=NULL,
         return    (stac.result)
     }
     sigEnv <- environment(CalSigMe)
-    TestMe <- function(Each.mat,sigEnv,Total.Medata,Total.Melocus){
+    TestMe <- function(Each.mat,sigEnv,Total.Medata,Total.Melocus,T.cns){
         if (ncol(Each.mat) == 1)    return (NULL)
+        inter.cns <- T.cns[[1]]
+        inter.cn <- T.cns[[2]]
         subn <- is.element(Total.Melocus[,"CHR"],unique(Each.mat[,"Nchr"]))
         sub.Melo <- rbind(Total.Melocus[subn,])
         inter.Me <- intersect(rownames(Total.Medata),sub.Melo[,"Methyl"])
@@ -152,6 +154,7 @@ MEsQTLFinder <- function(ASdb=NULL,Total.Medata=NULL,Total.Melocus=NULL,
     inter.cn <- c("Index","EnsID","Strand","Nchr","1stEX","2ndEX",
         "DownEX","UpEX","Types","Diff.P","ShortEX","LongEX","NeighborEX",
         "ShortNeighborEX","LongNeighborEX","RetainEX")
+    T.cns <- list(inter.cns,inter.cn)
     ra.mat <- ASdb@Ratio
     T.ra <- list(na.mat,na.mat,na.mat)
     names(T.ra) <- c("ES","ASS","IR")
@@ -177,9 +180,9 @@ MEsQTLFinder <- function(ASdb=NULL,Total.Medata=NULL,Total.Melocus=NULL,
     Total.Medata <- as.matrix(Total.Medata)
     Total.Melocus <- gsub(" ","",as.matrix(Total.Melocus))
     total.result <- NULL
-    ES.re <- TestMe(T.ra$ES,sigEnv,Total.Medata,Total.Melocus)
-    ASS.re <- TestMe(T.ra$ASS,sigEnv,Total.Medata,Total.Melocus)
-    IR.re <- TestMe(T.ra$IR,sigEnv,Total.Medata,Total.Melocus)
+    ES.re <- TestMe(T.ra$ES,sigEnv,Total.Medata,Total.Melocus,T.cns)
+    ASS.re <- TestMe(T.ra$ASS,sigEnv,Total.Medata,Total.Melocus,T.cns)
+    IR.re <- TestMe(T.ra$IR,sigEnv,Total.Medata,Total.Melocus,T.cns)
     total.list$"ES" <- fdr.cal(unique(ES.re))
     total.list$"ASS" <- fdr.cal(unique(ASS.re))
     total.list$"IR" <- fdr.cal(unique(IR.re))
