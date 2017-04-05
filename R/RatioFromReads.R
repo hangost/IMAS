@@ -171,7 +171,7 @@ RatioFromReads <- function(ASdb=NULL,Total.bamfiles=NULL,readsInfo=
     splitEnv <- environment(splitSplice)
     cEnv <- environment(coorEX)
     Each.Cal.ratio <- function(bamfiles=NULL,splicingInfo=NULL,
-        splitEnv,cEnv,ins,minr){
+        splitEnv,cEnv,ins,minr,readLen,readsInfo){
         ExReads <- function(t.ex,t.sp,g.e1,g.e2,g1,g2,s1,s2,
             ch,er,met,alt,ins,minr){
             coor.re <- NULL
@@ -459,7 +459,8 @@ RatioFromReads <- function(ASdb=NULL,Total.bamfiles=NULL,readsInfo=
         }
     }
     else    test.mat <- T.spl
-    final.ra <- Each.Cal.ratio(sample.files,test.mat,splitEnv,cEnv,ins,minr)
+    final.ra <- Each.Cal.ratio(sample.files,test.mat,
+        splitEnv,cEnv,ins,minr,readLen,readsInfo)
     if (!any(length(final.ra$"ES")))    final.ra$"ES" <- as.matrix("NA")
     if (!any(length(final.ra$"ASS")))    final.ra$"ASS" <- as.matrix("NA")
     if (!any(length(final.ra$"IR")))    final.ra$"IR" <- as.matrix("NA")
