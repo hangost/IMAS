@@ -75,46 +75,46 @@ MEsQTLFinder <- function(ASdb=NULL,Total.Medata=NULL,Total.Melocus=NULL,
             i=1
             pa.result <- foreach(i=seq_len(nrow(Each.mat)),
                 .packages=called.packages,.combine=rbind) %dopar% {
-                test.mat <- rbind(Each.mat[i,])
-                test.exp <- rbind(test.mat[,over.sam])
-                ex.re <- test.mat[,is.element(colnames(test.mat),inter.cns)]
-                ex.re <- do.call(rbind,strsplit(ex.re,"-"))
-                ex.re <- unlist(strsplit(ex.re,","))
-                test.ex.re <- ex.re != "NA" & ex.re != "NaN" & !is.na(ex.re)
-                ex.re <- as.integer(ex.re[test.ex.re])
-                ex.re <- cbind(min(ex.re),max(ex.re))
-                colnames(ex.re) <- c("start","end")
-                each.ran <- IRanges(start=ex.re[,"start"],end=ex.re[,"end"])
-                chr.rle <- Rle(test.mat[,"Nchr"])
-                EX.ran <- GRanges(seqnames=chr.rle,ranges=each.ran)
-                EX.ran <- list(EX.ran)
-                names(EX.ran) <- "alterIntron"
-                overMe <- findOversnp(EX.ran,Me.ran)
-                if (any(seq_along(overMe))&any(which(test.exp!="NA"))){
-                    int.Me <- intersect(rownames(sub.Meda),overMe[,"snp"])
-                    if (any(seq_along(int.Me))){
-                        te.Meda <- rbind(sub.Meda[int.Me,over.sam])
-                        rownames(te.Meda) <- int.Me
-                        on <- is.element(sub.Melo[,"Methyl"],overMe[,"snp"])
-                        te.Melo <- rbind(sub.Melo[on,])
-                        sig.re <- CalSigMe(test.exp,te.Meda,overMe,
-                            te.Melo,test.mat[,"Nchr"])
-                        if (any(seq_len(length(sig.re)))){
-                            nsi <- nrow(sig.re)
-                            o.cn.n <- is.element(inter.cn,colnames(test.mat))
-                            o.in.cn <- inter.cn[o.cn.n]
-                            pre.inf <- rep(rbind(test.mat[,o.in.cn]),nsi)
-                            pre.inf <- matrix(pre.inf,nsi,byrow=TRUE)
-                            colnames(pre.inf) <- o.in.cn
-                            p.ma <- sig.re[,is.element(colnames(sig.re),
-                                c("pByMet","pByGroups"))]
-                            cbind(sig.re[,"Meid"],pre.inf,p.ma)
+                    test.mat <- rbind(Each.mat[i,])
+                    test.exp <- rbind(test.mat[,over.sam])
+                    ex.re <- test.mat[,is.element(colnames(test.mat),inter.cns)]
+                    ex.re <- do.call(rbind,strsplit(ex.re,"-"))
+                    ex.re <- unlist(strsplit(ex.re,","))
+                    test.ex.re <- ex.re != "NA" & ex.re != "NaN" & !is.na(ex.re)
+                    ex.re <- as.integer(ex.re[test.ex.re])
+                    ex.re <- cbind(min(ex.re),max(ex.re))
+                    colnames(ex.re) <- c("start","end")
+                    each.ran <- IRanges(start=ex.re[,"start"],end=ex.re[,"end"])
+                    chr.rle <- Rle(test.mat[,"Nchr"])
+                    EX.ran <- GRanges(seqnames=chr.rle,ranges=each.ran)
+                    EX.ran <- list(EX.ran)
+                    names(EX.ran) <- "alterIntron"
+                    overMe <- findOversnp(EX.ran,Me.ran)
+                    if (any(seq_along(overMe))&any(which(test.exp!="NA"))){
+                        int.Me <- intersect(rownames(sub.Meda),overMe[,"snp"])
+                        if (any(seq_along(int.Me))){
+                            te.Meda <- rbind(sub.Meda[int.Me,over.sam])
+                            rownames(te.Meda) <- int.Me
+                            on <- is.element(sub.Melo[,"Methyl"],overMe[,"snp"])
+                            te.Melo <- rbind(sub.Melo[on,])
+                            sig.re <- CalSigMe(test.exp,te.Meda,overMe,
+                                te.Melo,test.mat[,"Nchr"])
+                            if (any(seq_len(length(sig.re)))){
+                                nsi <- nrow(sig.re)
+                                o.cn.n <- is.element(inter.cn,colnames(test.mat))
+                                o.in.cn <- inter.cn[o.cn.n]
+                                pre.inf <- rep(rbind(test.mat[,o.in.cn]),nsi)
+                                pre.inf <- matrix(pre.inf,nsi,byrow=TRUE)
+                                colnames(pre.inf) <- o.in.cn
+                                p.ma <- sig.re[,is.element(colnames(sig.re),
+                                    c("pByMet","pByGroups"))]
+                                cbind(sig.re[,"Meid"],pre.inf,p.ma)
+                            }
                         }
+                        else {NULL}
                     }
                     else {NULL}
                 }
-                else {NULL}
-            }
             if (any(length(pa.result))){
                 colnames(pa.result)[1] <- "MeID"
                 if (is.element("p.ma",colnames(pa.result))){
@@ -158,15 +158,16 @@ MEsQTLFinder <- function(ASdb=NULL,Total.Medata=NULL,Total.Melocus=NULL,
         ES.n <- grep("ES",CalIndex)
         ASS.n <- grep("ASS",CalIndex)
         IR.n <- grep("IR",CalIndex)
-        if (any(seq_along(ES.n))){
+        print (ra.mat)
+        if (ncol(ra.mat$ES) != 1 & any(seq_along(ES.n))){
             ea.mat <- ra.mat$ES
             T.ra$ES <- rbind(ea.mat[is.element(ea.mat[,"Index"],CalIndex),])
         }
-        if (any(seq_along(ASS.n))){
+        if (ncol(ra.mat$ASS) != 1 & any(seq_along(ASS.n))){
             ea.mat <- ra.mat$ASS
             T.ra$ASS <- rbind(ea.mat[is.element(ea.mat[,"Index"],CalIndex),])
         }
-        if (any(seq_along(IR.n))){
+        if (ncol(ra.mat$IR) != 1 & any(seq_along(IR.n))){
             ea.mat <- ra.mat$IR
             T.ra$IR <- rbind(ea.mat[is.element(ea.mat[,"Index"],CalIndex),])
         }

@@ -49,27 +49,27 @@ ClinicAnalysis <- function(ASdb,ClinicalInfo=NULL,CalIndex=NULL,
         ea.re <- test.mat
         total.p <- foreach(each.num=seq_len(nrow(ea.re)),
             .packages=called.packages,.combine=rbind) %dopar% {
-            Pv <- NULL
-            ea.ra <- rbind(ea.re[each.num,])
-            p.r <- ea.ra[!is.element(colnames(ea.ra),rownames(ClinicalInfo))]
-            ea.ra <- ea.ra[,!is.na(ea.ra) & ea.ra != "NA"]
-            ov.sam <- intersect(rownames(ClinicalInfo),names(ea.ra))
-            ea.ra <- ea.ra[ov.sam]
-            sub.Cl <- rbind(ClinicalInfo[ov.sam,])
-            if (length(ov.sam) > as.integer(t.sam/3)){
-                Pv <- km_sur(sub.Cl,ea.ra)
-                if (display)    Pv
-                else    rbind(c(p.r,Pv))
+                Pv <- NULL
+                ea.ra <- rbind(ea.re[each.num,])
+                p.r <- ea.ra[!is.element(colnames(ea.ra),rownames(ClinicalInfo))]
+                ea.ra <- ea.ra[,!is.na(ea.ra) & ea.ra != "NA"]
+                ov.sam <- intersect(rownames(ClinicalInfo),names(ea.ra))
+                ea.ra <- ea.ra[ov.sam]
+                sub.Cl <- rbind(ClinicalInfo[ov.sam,])
+                if (length(ov.sam) > as.integer(t.sam/3)){
+                    Pv <- km_sur(sub.Cl,ea.ra)
+                    if (display)    Pv
+                    else    rbind(c(p.r,Pv))
+                }
+                else    Pv
             }
-            else    Pv
-        }
         if (!display & length(total.p)){
             cn.test <- !is.element(colnames(ea.re),rownames(ClinicalInfo))
             colnames(total.p) <- c(colnames(ea.re)[cn.test],"Pvalue")
         }
         return (total.p)
     }
-
+    
     each.num <- NULL
     registerDoParallel(cores=Ncor) 
     Exon.ratio.mat <- list(as.matrix("NA"),as.matrix("NA"),as.matrix("NA"))
@@ -79,17 +79,17 @@ ClinicAnalysis <- function(ASdb,ClinicalInfo=NULL,CalIndex=NULL,
         ES.n <- grep("ES",CalIndex)
         ASS.n <- grep("ASS",CalIndex)
         IR.n <- grep("IR",CalIndex)
-        if (any(length(ES.n))){
+        if (ncol(ASdb@Ratio$ES) != 1 & any(length(ES.n))){
             ea.mat <- ASdb@Ratio$ES
             ea.re <- ea.mat[is.element(ea.mat[,"Index"],CalIndex),]
             Exon.ratio.mat$ES <- rbind(ea.re)
         }
-        if (any(length(ASS.n))){
+        if (ncol(ASdb@Ratio$ASS) != 1 & any(length(ASS.n))){
             ea.mat <- ASdb@Ratio$ASS
             ea.re <- ea.mat[is.element(ea.mat[,"Index"],CalIndex),]
             Exon.ratio.mat$ASS <- rbind(ea.re)
         }
-        if (any(length(IR.n))){
+        if (ncol(ASdb@Ratio$IR) != 1 & any(length(IR.n))){
             ea.mat <- ASdb@Ratio$IR
             ea.re <- ea.mat[is.element(ea.mat[,"Index"],CalIndex),]
             Exon.ratio.mat$IR <- rbind(ea.re)
