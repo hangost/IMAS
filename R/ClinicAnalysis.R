@@ -1,6 +1,6 @@
 ClinicAnalysis <- function(ASdb,ClinicalInfo=NULL,CalIndex=NULL,
     display=FALSE,Ncor=1,out.dir=NULL){
-    kmsur <- function(ClinicalInfo,txs.ratio){
+    kmsur <- function(ClinicalInfo,txs.ratio,display){
         pv <- NULL
         sta.na <- ClinicalInfo[,"status"] != "NA" & 
             !is.na(ClinicalInfo[,"status"])
@@ -58,7 +58,7 @@ ClinicAnalysis <- function(ASdb,ClinicalInfo=NULL,CalIndex=NULL,
             ea.ra <- ea.ra[ov.sam]
             sub.Cl <- rbind(ClinicalInfo[ov.sam,])
             if (length(ov.sam) > as.integer(t.sam/3)){
-                Pv <- kmEnv$kmsur(sub.Cl,ea.ra)
+                Pv <- kmEnv$kmsur(sub.Cl,ea.ra,display)
                 if (display)    Pv
                 else    rbind(c(p.r,Pv))
             }

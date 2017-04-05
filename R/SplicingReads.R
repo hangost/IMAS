@@ -41,7 +41,7 @@ SplicingReads <- function(bamfile=NULL,test.exon=NULL,spli.jun=NULL,
         return (ov.E.r)
     }
     exEnv <- environment(ex.test)
-    pa.test <- function(Preads){
+    pa.test <- function(Preads,readsinfo){
         count.reads <- function(bet.num){
             fi.nums <- over.mat[,"subjectHits"] == bet.num[1]
             se.nums <- over.mat[,"subjectHits"] == bet.num[2]
@@ -121,7 +121,7 @@ SplicingReads <- function(bamfile=NULL,test.exon=NULL,spli.jun=NULL,
     N.re <- N.test(Nreads)
     not.N <- !is.element(names(T.reads),N.re$re.nms)
     Not.N.reads <- T.reads[not.N,]
-    P.re <- pa.test(Not.N.reads)
+    P.re <- pa.test(Not.N.reads,readsinfo)
     N.re <- N.re$junctionInfo
     final.re <- list(P.re$pairedInfo,P.re$exonInfo,N.re)
     names(final.re) <- c("pairedInfo","exonInfo","junctionInfo")

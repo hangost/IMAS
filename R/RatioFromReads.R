@@ -16,8 +16,8 @@ RatioFromReads <- function(ASdb=NULL,Total.bamfiles=NULL,readsInfo=
         }))
         return (unique(final.re))
     }
-    coorEX <- function(spl.re,g.Info,readLen,inseSize,min.r=5,AStype){
-        Normalized.values <- function(exons.l){
+    coorEX <- function(spl.re,g.Info,readLen,inse,min.r=5,AStype){
+        Normalized.values <- function(exons.l,inse){
             normal.max.in <- 0
             normal.max.skip <- 0
             normal.in <- 0
@@ -80,7 +80,6 @@ RatioFromReads <- function(ASdb=NULL,Total.bamfiles=NULL,readsInfo=
         paired.r <- spl.re$pairedInfo
         exon.r <- spl.re$exonInfo
         junction.r <- spl.re$junctionInfo
-        inse <- inseSize
         total.exon.l <- 0
         if (sum(c(paired.r,exon.r,junction.r)) == 0){
             return ("NA")
@@ -109,17 +108,16 @@ RatioFromReads <- function(ASdb=NULL,Total.bamfiles=NULL,readsInfo=
         if (!any(length(g.1.j.r))) g.1.j.r <- 0
         if (!any(length(g.2.j.r))) g.2.j.r <- 0
         read.l <- as.integer(readLen)
-        inse <- inseSize
         an.size=1
-        normal.values <- Normalized.values(total.exon.l)
+        normal.values <- Normalized.values(total.exon.l,inse)
         if (AStype == "ESse") return ("NA")
         if (AStype == "ES" | AStype == "MXE"){
             if (AStype == "MXE"){
-                fi.normal.values <- Normalized.values(total.exon.l[c(1,2,4)])
-                se.normal.values <- Normalized.values(total.exon.l[c(1,3,4)])
-                fi.normal.values[c("pair.sk","pairwojun.sk","jun.sk")] <- 
-                    se.normal.values[c("pair.in","pairwojun.in","jun.in")]
-                normal.values <- fi.normal.values
+                fi.Nvalues <- Normalized.values(total.exon.l[c(1,2,4)],inse)
+                se.N.values <- Normalized.values(total.exon.l[c(1,3,4)],inse)
+                fi.Nvalues[c("pair.sk","pairwojun.sk","jun.sk")] <- 
+                    se.N.values[c("pair.in","pairwojun.in","jun.in")]
+                normal.values <- fi.Nvalues
             }
             total.reads <- sum(g.1.p.r,g.1.j.r,g.2.p.r,g.2.j.r)
             g.1.nor.num <- sum(normal.values[c("pairwojun.in","jun.in")])
@@ -171,20 +169,21 @@ RatioFromReads <- function(ASdb=NULL,Total.bamfiles=NULL,readsInfo=
         return (group.1.2.ratio)
     }
     splitEnv <- environment(splitSplice)
-    coorEnv <- environment(coorEX)
-    Each.Cal.ratio <- function(bamfiles=NULL,splicingInfo=NULL,splitEnv,coorEnv){
-        ExReads <- function(t.ex,t.sp,g.e1,g.e2,g1,g2,s1,s2,ch,er,met,alt){
+    cEnv <- environment(coorEX)
+    Each.Cal.ratio <- function(bamfiles=NULL,splicingInfo=NULL,
+        splitEnv,cEnv,ins,minr){
+        ExReads <- function(t.ex,t.sp,g.e1,g.e2,g1,g2,s1,s2,
+            ch,er,met,alt,ins,minr){
             coor.re <- NULL
-            inse <- inserSize
             pre.bam.re <- lapply(seq_along(bamfiles),function(ebam){
-                T.r <- SplicingReads(bamfiles[ebam],t.ex,t.sp,er,ch,met,inse)
+                T.r <- SplicingReads(bamfiles[ebam],t.ex,t.sp,er,ch,met,ins)
                 group.1.list <- list(g1,g.e1,s1)
                 group.2.list <- list(g2,g.e2,s2)
                 names(group.1.list) <- c("paired","exon","junction")
                 names(group.2.list) <- c("paired","exon","junction")
                 t.g.li <- list(group.1.list,group.2.list)
                 names(t.g.li) <- c("Inclu","Skip")
-                coor.re <- coorEnv$coorEX(T.r,t.g.li,readLen,inserSize,minr,alt)
+                coor.re <- cEnv$coorEX(T.r,t.g.li,readLen,ins,minr,alt)
                 coor.re
             })
         pre.bam.re <- do.call(cbind,pre.bam.re)    
@@ -230,7 +229,7 @@ RatioFromReads <- function(ASdb=NULL,Total.bamfiles=NULL,readsInfo=
                     t.sp <- c(g.1.s,g.2.s)
                     e.chr <- unique(ES.re[,"Nchr"])
                     pr.re <- ExReads(t.ex,t.sp,t.ex,t.ex,g.1.p,g.2.p,
-                        g.1.s,g.2.s,e.chr,each.ran,readsInfo,"ES")
+                        g.1.s,g.2.s,e.chr,each.ran,readsInfo,"ES",ins,minr)
                     pr.re
                 }
                 fi.re <- cbind(rbind(ES.fi.result[,c("Index","EnsID","Nchr",
@@ -263,7 +262,7 @@ RatioFromReads <- function(ASdb=NULL,Total.bamfiles=NULL,readsInfo=
                         ES.re[,"2ndEX"],ES.re[,"UpEX"])
                     e.chr <- unique(ES.re[,"Nchr"])
                     pr.re <- ExReads(t.ex,t.sp,t.ex,t.ex,g.1.p,g.2.p,
-                        g.1.s,g.2.s,e.chr,each.ran,readsInfo,"ESse")
+                        g.1.s,g.2.s,e.chr,each.ran,readsInfo,"ESse",ins,minr)
                     pr.re
                 }
                 se.re <- cbind(rbind(ES.se.result[,c("Index","EnsID","Nchr",
@@ -301,7 +300,7 @@ RatioFromReads <- function(ASdb=NULL,Total.bamfiles=NULL,readsInfo=
                     t.ex <- ES.re[,c("DownEX","1stEX","2ndEX","UpEX")]
                     e.chr <- unique(ES.re[,"Nchr"])
                     pr.re <- ExReads(t.ex,t.sp,g.1.e,g.2.e,g.1.p,g.2.p,
-                        g.1.s,g.2.s,e.chr,each.ran,readsInfo,"MXE")
+                        g.1.s,g.2.s,e.chr,each.ran,readsInfo,"MXE",ins,minr)
                     pr.re
                 }
                 MXE.re <- cbind(rbind(MXE.result[,c("Index","EnsID","Nchr",
@@ -340,7 +339,7 @@ RatioFromReads <- function(ASdb=NULL,Total.bamfiles=NULL,readsInfo=
                 t.ex <- c(ea.re[,"DownEX"],ex.sp,ea.re[,"UpEX"])
                 e.chr <- unique(ea.re[,"Nchr"])
                 pr.re <- ExReads(t.ex,g.1.s,t.ex,t.ex,g.1.p,g.2.p,
-                        g.1.s,g.2.s,e.chr,each.ran,"exon","IR")
+                        g.1.s,g.2.s,e.chr,each.ran,"exon","IR",ins,minr)
                 pr.re
             }
             IR.result <- cbind(rbind(IR.result[,c("Index","EnsID","Nchr",
@@ -410,7 +409,7 @@ RatioFromReads <- function(ASdb=NULL,Total.bamfiles=NULL,readsInfo=
                 t.sp <- c(g.1.s,g.2.s)
                 e.chr <- unique(ea.re[,"Nchr"])
                 pr.re <- ExReads(t.ex,g.1.s,g.1.e,g.2.e,g.1.p,g.2.p,
-                        g.1.s,g.2.s,e.chr,each.ran,"exon","ASS")
+                        g.1.s,g.2.s,e.chr,each.ran,"exon","ASS",ins,minr)
                 pr.re
             }
             te.cn <- "Index|EnsID|Nchr|ShortEX|LongEX|NeighborEX|Types"
@@ -425,6 +424,7 @@ RatioFromReads <- function(ASdb=NULL,Total.bamfiles=NULL,readsInfo=
         names(final.re) <- c("ES","ASS","IR")
         return (final.re)
     }
+    ins <- inserSize
     ea.re <- NULL
     ES.num <- NULL
     IR.num <- NULL
@@ -459,7 +459,7 @@ RatioFromReads <- function(ASdb=NULL,Total.bamfiles=NULL,readsInfo=
         }
     }
     else    test.mat <- T.spl
-    final.ra <- Each.Cal.ratio(sample.files,test.mat,splitEnv,coorEnv)
+    final.ra <- Each.Cal.ratio(sample.files,test.mat,splitEnv,cEnv,ins,minr)
     if (!any(length(final.ra$"ES")))    final.ra$"ES" <- as.matrix("NA")
     if (!any(length(final.ra$"ASS")))    final.ra$"ASS" <- as.matrix("NA")
     if (!any(length(final.ra$"IR")))    final.ra$"IR" <- as.matrix("NA")

@@ -1,6 +1,7 @@
 MEsQTLFinder <- function(ASdb=NULL,Total.Medata=NULL,Total.Melocus=NULL,
     GroupSam=NULL,Ncor=1,CalIndex=NULL,out.dir=NULL){
-    CalSigMe <- function(ratio.mat,Me.mat,overlapMe,each.Melocus,chr){
+    CalSigMe <- function(ratio.mat,Me.mat,overlapMe,
+        each.Melocus,chr,GroupSam){
         colnames(overlapMe) <- c("snp","locus")
         realnums <- ratio.mat != "NA" & ratio.mat != "NaN"
         realNA <- colnames(ratio.mat)[realnums]
@@ -56,7 +57,7 @@ MEsQTLFinder <- function(ASdb=NULL,Total.Medata=NULL,Total.Melocus=NULL,
         return    (stac.result)
     }
     sigEnv <- environment(CalSigMe)
-    TestMe <- function(Each.mat,sigEnv){
+    TestMe <- function(Each.mat,sigEnv,Total.Medata,Total.Melocus){
         if (ncol(Each.mat) == 1)    return (NULL)
         subn <- is.element(Total.Melocus[,"CHR"],unique(Each.mat[,"Nchr"]))
         sub.Melo <- rbind(Total.Melocus[subn,])
@@ -99,7 +100,7 @@ MEsQTLFinder <- function(ASdb=NULL,Total.Medata=NULL,Total.Melocus=NULL,
                         on <- is.element(sub.Melo[,"Methyl"],overMe[,"snp"])
                         te.Melo <- rbind(sub.Melo[on,])
                         sig.re <- sigEnv$CalSigMe(test.exp,te.Meda,overMe,
-                            te.Melo,test.mat[,"Nchr"])
+                            te.Melo,test.mat[,"Nchr"],GroupSam)
                         if (any(seq_len(length(sig.re)))){
                             nsi <- nrow(sig.re)
                             o.cn.n <- is.element(inter.cn,colnames(test.mat))
@@ -176,9 +177,9 @@ MEsQTLFinder <- function(ASdb=NULL,Total.Medata=NULL,Total.Melocus=NULL,
     Total.Medata <- as.matrix(Total.Medata)
     Total.Melocus <- gsub(" ","",as.matrix(Total.Melocus))
     total.result <- NULL
-    ES.re <- TestMe(T.ra$ES,sigEnv)
-    ASS.re <- TestMe(T.ra$ASS,sigEnv)
-    IR.re <- TestMe(T.ra$IR,sigEnv)
+    ES.re <- TestMe(T.ra$ES,sigEnv,Total.Medata,Total.Melocus)
+    ASS.re <- TestMe(T.ra$ASS,sigEnv,Total.Medata,Total.Melocus)
+    IR.re <- TestMe(T.ra$IR,sigEnv,Total.Medata,Total.Melocus)
     total.list$"ES" <- fdr.cal(unique(ES.re))
     total.list$"ASS" <- fdr.cal(unique(ASS.re))
     total.list$"IR" <- fdr.cal(unique(IR.re))
