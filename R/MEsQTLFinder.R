@@ -56,7 +56,7 @@ MEsQTLFinder <- function(ASdb=NULL,Total.Medata=NULL,Total.Melocus=NULL,
         return    (stac.result)
     }
     sigEnv <- environment(CalSigMe)
-    TestMe <- function(Each.mat){
+    TestMe <- function(Each.mat,sigEnv){
         if (ncol(Each.mat) == 1)    return (NULL)
         subn <- is.element(Total.Melocus[,"CHR"],unique(Each.mat[,"Nchr"]))
         sub.Melo <- rbind(Total.Melocus[subn,])
@@ -176,9 +176,9 @@ MEsQTLFinder <- function(ASdb=NULL,Total.Medata=NULL,Total.Melocus=NULL,
     Total.Medata <- as.matrix(Total.Medata)
     Total.Melocus <- gsub(" ","",as.matrix(Total.Melocus))
     total.result <- NULL
-    ES.re <- TestMe(T.ra$ES)
-    ASS.re <- TestMe(T.ra$ASS)
-    IR.re <- TestMe(T.ra$IR)
+    ES.re <- TestMe(T.ra$ES,sigEnv)
+    ASS.re <- TestMe(T.ra$ASS,sigEnv)
+    IR.re <- TestMe(T.ra$IR,sigEnv)
     total.list$"ES" <- fdr.cal(unique(ES.re))
     total.list$"ASS" <- fdr.cal(unique(ASS.re))
     total.list$"IR" <- fdr.cal(unique(IR.re))
