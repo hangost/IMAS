@@ -47,6 +47,7 @@ ClinicAnalysis <- function(ASdb,ClinicalInfo=NULL,CalIndex=NULL,
     }
     kmEnv <- environment(kmsur)
     p.cal <- function(test.mat,ClinicalInfo,kmEnv,display){
+        t.sam <- nrow(ClinicalInfo)
         ea.re <- test.mat
         total.p <- foreach(each.num=seq_len(nrow(ea.re)),
             .packages=called.packages,.combine=rbind) %dopar% {
@@ -96,7 +97,6 @@ ClinicAnalysis <- function(ASdb,ClinicalInfo=NULL,CalIndex=NULL,
         }
     }
     else    Exon.ratio.mat <- ASdb@Ratio
-    t.sam <- nrow(ClinicalInfo)
     called.packages <- c("lme4","GenomicRanges","GenomicFeatures")
     ES.re <- p.cal(Exon.ratio.mat$"ES",ClinicalInfo,kmEnv,display)
     ASS.re <- p.cal(Exon.ratio.mat$"ASS",ClinicalInfo,kmEnv,display)
