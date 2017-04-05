@@ -148,7 +148,8 @@ MEsQTLFinder <- function(ASdb=NULL,Total.Medata=NULL,Total.Melocus=NULL,
         return (each.result)
     }
     na.mat <- as.matrix("NA")
-    registerDoParallel(cores=Ncor)
+    Ncor <- makeCluster(Ncor)
+    registerDoParallel(Ncor)
     called.packages <- c("lme4","GenomicRanges","GenomicFeatures")
     inter.cns <- c("DownEX","UpEX","ShortEX","LongEX","NeighborEX",
         "ShortNeighborEX","LongNeighborEX")
@@ -200,6 +201,7 @@ MEsQTLFinder <- function(ASdb=NULL,Total.Medata=NULL,Total.Melocus=NULL,
         write.table(total.list[["IR"]],
             paste(p.out,"/IR_Me-sQTLs.txt",sep=""),sep='\t',quote=FALSE)
     }
+    stopCluster(Ncor)
     return (ASdb)
 }
 

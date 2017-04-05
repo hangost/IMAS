@@ -437,7 +437,8 @@ RatioFromReads <- function(ASdb=NULL,Total.bamfiles=NULL,readsInfo=
     fi.pair.2 <- NULL
     se.pair.2 <- NULL
     final.re <- NULL
-    registerDoParallel(cores=Ncor)
+    Ncor <- makeCluster(Ncor)
+    registerDoParallel(Ncor)
     called.packages <- c("GenomicRanges","GenomicFeatures")
     sample.files <- rbind(Total.bamfiles[,"path"])
     sample.names <- rbind(Total.bamfiles[,"names"])
@@ -477,6 +478,7 @@ RatioFromReads <- function(ASdb=NULL,Total.bamfiles=NULL,readsInfo=
         write.table(final.ra[["IR"]],
             paste(p.out,"IR_Ratio.txt",sep=""),sep='\t',quote=FALSE)
     }
+    stopCluster(Ncor)
     return(ASdb)
 }
 

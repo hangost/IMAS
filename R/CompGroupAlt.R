@@ -40,7 +40,8 @@ CompGroupAlt <- function(ASdb=NULL,GroupSam=NULL,Ncor=1,
     each.nums <- NULL
     each.p.result <- NULL
     called.packages <- c("lme4","GenomicRanges","GenomicFeatures")
-    registerDoParallel(cores=Ncor)
+    Ncor <- makeCluster(Ncor)
+    registerDoParallel(Ncor)
     T.ra <- ASdb@"Ratio"
     not.values <- any(length(T.ra)) & T.ra != "NA" & !is.na(T.ra)
     tested.types <- names(T.ra)[not.values]
@@ -88,6 +89,7 @@ CompGroupAlt <- function(ASdb=NULL,GroupSam=NULL,Ncor=1,
         write.table(total.p$"IR",
             paste(p.out,"/IR_CompGroup.txt",sep=""),sep='\t',quote=FALSE)
     }
+    stopCluster(Ncor)
     return (ASdb)
     
 }

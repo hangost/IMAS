@@ -387,7 +387,8 @@ ExonsCluster <- function(ASdb,GTFdb,Ncor=1){
         final.result <- rbind(fi.ES.re,se.ES.re,mxe.ES.re)
         return (final.result)
     }
-    registerDoParallel(cores=Ncor)
+    Ncor <- makeCluster(Ncor)
+    registerDoParallel(Ncor)
     trans.intron.range <- intronsByTranscript(GTFdb)
     tx.cns <- c("TXCHROM","TXNAME","GENEID","TXSTART","TXEND","TXSTRAND")
     txTable <- try(select(GTFdb,keys=names(trans.intron.range),
@@ -482,5 +483,6 @@ ExonsCluster <- function(ASdb,GTFdb,Ncor=1){
     ASdb <- new("ASdb",SplicingModel=total.list,Ratio=ASdb@"Ratio",
         GroupDiff=ASdb@"GroupDiff",sQTLs=ASdb@"sQTLs",
         Me.sQTLs=ASdb@"Me.sQTLs",Clinical=ASdb@"Clinical")
+    stopCluster(Ncor)
     return (ASdb)
 }

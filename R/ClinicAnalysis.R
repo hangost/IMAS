@@ -72,7 +72,8 @@ ClinicAnalysis <- function(ASdb,ClinicalInfo=NULL,CalIndex=NULL,
         return (total.p)
     }
     each.num <- NULL
-    registerDoParallel(cores=Ncor) 
+    Ncor <- makeCluster(Ncor)
+    registerDoParallel(Ncor) 
     Exon.ratio.mat <- list(as.matrix("NA"),as.matrix("NA"),as.matrix("NA"))
     names(Exon.ratio.mat) <- c("ES","ASS","IR")
     clinical.mat <- Exon.ratio.mat
@@ -144,6 +145,7 @@ ClinicAnalysis <- function(ASdb,ClinicalInfo=NULL,CalIndex=NULL,
         write.table(clinical.mat[["IR"]],
             paste(p.out,"IR_Survival.txt",sep=""),sep='\t',quote=FALSE)
     }
+    stopCluster(Ncor) 
     return (ASdb)
 }
 
