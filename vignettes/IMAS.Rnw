@@ -179,7 +179,7 @@ ASdb <- RatioFromReads(ASdb=ASdb,samplebamfiles,readsInfo="paired",
     readLen=50,inserSize=40,minr=3,CalIndex="ES3",Ncor=1)
 ASdb
 
-head(rbind(slot(ASdb,"Ratio")$"ES"[,1:20]))
+head(rbind(slot(ASdb,"Ratio")$"ES"))
 @
 As an example, one single index number, ES3, returns the PSI value of a splicing pattern, which is an AS exon located in chr11:100962491-100962607. One can use the argument for "out.dir" to save the results in a specific directory.
 
