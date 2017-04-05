@@ -196,7 +196,7 @@ You can use the argument for "out.dir" to save your results in a specific direct
 \Rfunction{sQTLsFinder} in the \Biocpkg{IVAS} package is used to identify significant SNPs that are associated with AS ratio (PSI). The result will be saved in the slot labeled "sQTLs" of \Robject{ASdb}.
 <<sQTLsFinder function>>=
 ASdb <- sQTLsFinder(ASdb=ASdb,Total.snpdata=samplesnp,Total.snplocus=samplesnplocus,
-    GroupSam=GroupSam,Ncor=1,CalIndex="ES3",method="lm")
+    GroupSam=NULL,Ncor=1,CalIndex="ES3",method="lm")
 ASdb
 
 head(slot(ASdb,"sQTLs")$"ES")
