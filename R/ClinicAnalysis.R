@@ -49,27 +49,27 @@ ClinicAnalysis <- function(ASdb,ClinicalInfo=NULL,CalIndex=NULL,
         ea.re <- test.mat
         total.p <- foreach(each.num=seq_len(nrow(ea.re)),
             .packages=called.packages,.combine=rbind) %dopar% {
-                Pv <- NULL
-                ea.ra <- rbind(ea.re[each.num,])
-                p.r <- ea.ra[!is.element(colnames(ea.ra),rownames(ClinicalInfo))]
-                ea.ra <- ea.ra[,!is.na(ea.ra) & ea.ra != "NA"]
-                ov.sam <- intersect(rownames(ClinicalInfo),names(ea.ra))
-                ea.ra <- ea.ra[ov.sam]
-                sub.Cl <- rbind(ClinicalInfo[ov.sam,])
-                if (length(ov.sam) > as.integer(t.sam/3)){
-                    Pv <- km_sur(sub.Cl,ea.ra)
-                    if (display)    Pv
-                    else    rbind(c(p.r,Pv))
-                }
-                else    Pv
+            Pv <- NULL
+            ea.ra <- rbind(ea.re[each.num,])
+            p.r <- ea.ra[!is.element(colnames(ea.ra),rownames(ClinicalInfo))]
+            ea.ra <- ea.ra[,!is.na(ea.ra) & ea.ra != "NA"]
+            ov.sam <- intersect(rownames(ClinicalInfo),names(ea.ra))
+            ea.ra <- ea.ra[ov.sam]
+            sub.Cl <- rbind(ClinicalInfo[ov.sam,])
+            if (length(ov.sam) > as.integer(t.sam/3)){
+                Pv <- km_sur(sub.Cl,ea.ra)
+                if (display)    Pv
+                else    rbind(c(p.r,Pv))
             }
+            else    Pv
+        }
         if (!display & length(total.p)){
             cn.test <- !is.element(colnames(ea.re),rownames(ClinicalInfo))
             colnames(total.p) <- c(colnames(ea.re)[cn.test],"Pvalue")
         }
         return (total.p)
     }
-    
+
     each.num <- NULL
     registerDoParallel(cores=Ncor) 
     Exon.ratio.mat <- list(as.matrix("NA"),as.matrix("NA"),as.matrix("NA"))

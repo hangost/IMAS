@@ -304,6 +304,105 @@ ExonsCluster <- function(ASdb,GTFdb,Ncor=1){
             "Do_des","Up_des","Outter_splice","Inner_splice","Types")
         return (final.result)
     }
+    ES.Alt.result <- function(altSplice){
+        fi.ES.re <- NULL
+        se.ES.re <- NULL
+        mxe.ES.re <- NULL
+        ES.merge.f <- function(ES.result,Alt.type){
+            firstEX <- strsplit(ES.result[,"1stEX"],"-")
+            firstEX <- unique(do.call(rbind,firstEX))
+            colnames(firstEX) <- c("start","end")
+            fi.s <- as.integer(firstEX[,"start"])
+            fi.e <- as.integer(firstEX[,"end"])
+            each.ranges <- IRanges(start=fi.s,end=fi.e)
+            firstEX.range <- GRanges('*',ranges=each.ranges)
+            merged.final.result <- NULL
+            sorted.first.EX <- sortEX(firstEX.range,"ranges")
+            se.test <- any(which(ES.result[,"2ndEX"] != "NA"))
+            final.result <- NULL
+            cn <- c("1stEX","2ndEX","DownEX","UpEX","1st_des","2nd_des",
+                "Do_des","Up_des","1stSpl","2ndSpl","3rdSpl","Types")
+            m.final.result <- lapply(sorted.first.EX,function(sfe){
+                ea.fi.EX <- cbind(start(sfe),end(sfe))
+                colnames(ea.fi.EX) <- c("start","end")
+                p.fi.ex <- paste(ea.fi.EX[,"start"],ea.fi.EX[,"end"],sep="-")
+                over.ex <- is.element(ES.result[,"1stEX"],p.fi.ex)
+                sub.ES <- rbind(ES.result[over.ex,])
+                DoEX <- unique(sub.ES[,"Do_des"])
+                DoEX <- unlist(strsplit(DoEX,","))
+                DoEX <- unique(do.call(rbind,strsplit(DoEX,"-")))
+                UpEX <- unique(sub.ES[,"Up_des"])
+                UpEX <- unlist(strsplit(UpEX,","))
+                UpEX <- unique(do.call(rbind,strsplit(UpEX,"-")))
+                colnames(DoEX) <- c("start","end")
+                colnames(UpEX) <- c("start","end")
+                Do.des <- p.st(paste(DoEX[,"start"],DoEX[,"end"],sep="-"))
+                up.des <- p.st(paste(UpEX[,"start"],UpEX[,"end"],sep="-"))
+                tar.des <- p.st(p.fi.ex)
+                merged.Do <- cbind(rbind(c(min(as.double(DoEX[,"start"])),
+                    max(as.double(DoEX[,"end"])))),rbind(Do.des))
+                merged.Up <- cbind(rbind(c(min(as.double(UpEX[,"start"])),
+                    max(as.double(UpEX[,"end"])))),rbind(up.des))
+                mer.tar <- cbind(rbind(c(min(as.double(ea.fi.EX[,"start"])),
+                    max(as.double(ea.fi.EX[,"end"])))),rbind(tar.des))
+                colnames(mer.tar) <- c("start","end","des")
+                colnames(merged.Up) <- c("start","end","des")
+                colnames(merged.Do) <- c("start","end","des")
+                if (Alt.type == "ES" & !se.test){
+                    final.result <- c(merge.mat(mer.tar,
+                        merged.Do,merged.Up,Alt.type))
+                    names(final.result) <- cn
+                    final.result
+                }
+                else if ((Alt.type == "MXE" | Alt.type == "ES") & se.test){
+                    secondEX <- strsplit(sub.ES[,"2ndEX"],"-")
+                    secondEX <- unique(do.call(rbind,secondEX))
+                    colnames(secondEX) <- c("start","end")
+                    se.s <- as.integer(secondEX[,"start"])
+                    se.e <- as.integer(secondEX[,"end"])
+                    se.ea.ran <- IRanges(start=se.s,end=se.e)
+                    secondEX.range <- GRanges('*',ranges=se.ea.ran)
+                    sorted.secondEX <- sortEX(secondEX.range,"ranges")
+                    if (length(sorted.secondEX) > 1)    return (NULL)
+                    sorted.secondEX <- sorted.secondEX[[1]]
+                    ov.ex.ran <- findOverlaps(sfe,sorted.secondEX)
+                    over.nums <- unique(as.matrix(ov.ex.ran)[,"subjectHits"])
+                    if (any(length(over.nums))){
+                        secondEX <- rbind(secondEX[-over.nums,])
+                    }
+                    if (!any(length(secondEX)))    return (NULL)
+                    pse <- paste(secondEX[,"start"],secondEX[,"end"],sep="-")
+                    second.des <- p.st(pse)
+                    m.se <- cbind(rbind(c(min(as.double(secondEX[,"start"])),
+                        max(as.double(secondEX[,"end"])))),rbind(second.des))
+                    colnames(m.se) <- c("start","end","des")
+                    final.result <- c(merge.mat(mer.tar,
+                        m.se,merged.Do,Alt.type,merged.Up))
+                    names(final.result) <- cn
+                    final.result
+                }
+            })
+            if (any(length(m.final.result))){
+                m.final.result <- do.call(rbind,m.final.result)
+            }
+            return (m.final.result)
+        }
+        fi.ES <- rbind(altSplice[altSplice[,"2ndEX"] == "NA",])
+        se.ES <- rbind(altSplice[altSplice[,"2ndEX"] != "NA",])
+        se.ES <- rbind(se.ES[se.ES[,"Types"] == "ES",])
+        mxe.ES <- rbind(altSplice[altSplice[,"Types"] == "MXE",])
+        if (any(length(fi.ES))){
+            fi.ES.re <- ES.merge.f(fi.ES,"ES")
+        }
+        if (any(length(se.ES))){
+            se.ES.re <- ES.merge.f(se.ES,"ES")
+        }
+        if (any(length(mxe.ES))){
+            mxe.ES.re <- ES.merge.f(mxe.ES,"MXE")
+        }
+        final.result <- rbind(fi.ES.re,se.ES.re,mxe.ES.re)
+        return (final.result)
+    }
     registerDoParallel(cores=Ncor)
     trans.intron.range <- intronsByTranscript(GTFdb)
     tx.cns <- c("TXCHROM","TXNAME","GENEID","TXSTART","TXEND","TXSTRAND")
@@ -323,7 +422,6 @@ ExonsCluster <- function(ASdb,GTFdb,Ncor=1){
     ASS.num <- NULL
     IR.num <- NULL
     final.result <- NULL
-    Alt.splice.result$ES <- as.matrix("NA")
     if (ncol(Alt.splice.result$ES) != 1){
         ES.gene <- unique(Alt.splice.result$ES[,"EnsID"])
     }
