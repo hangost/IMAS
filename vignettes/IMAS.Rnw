@@ -272,6 +272,12 @@ Expected survival outcomes of two groups, expressing high and low PSIs, are plot
 <<sessionInfo, echo=FALSE>>=
 sessionInfo()
 @
+
+\section{Cleanup}
+<<closeConnetions,results=hide, echo=FALSE>>=
+closeAllConnections()
+@
+
 \begin{thebibliography}{9}
 
 \bibitem{Jamal} Jamal Tazia, Nadia Bakkoura, Stefan Stamm. Alternative splicing and disease. Biochim Biophys Acta, 2008. doi: 10.1016/j.bbadis.2008.09.017.
