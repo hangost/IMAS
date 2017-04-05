@@ -142,6 +142,8 @@ MEsQTLFinder <- function(ASdb=NULL,Total.Medata=NULL,Total.Melocus=NULL,
         each.result <- cbind(each.result[,p.num.ra],fd.mat)
         return (each.result)
     }
+    sigEnv <- environment(CalSigMe)
+    CalSigMe <- sigEnv$CalSigMe
     na.mat <- as.matrix("NA")
     registerDoParallel(cores=Ncor)
     called.packages <- c("lme4","GenomicRanges","GenomicFeatures")

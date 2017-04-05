@@ -424,6 +424,10 @@ RatioFromReads <- function(ASdb=NULL,Total.bamfiles=NULL,readsInfo=
         names(final.re) <- c("ES","ASS","IR")
         return (final.re)
     }
+    splitEnv <- environment(splitSplice)
+    coorEnv <- environment(coorEX)
+    splitSplice <- splitEnv$splitSplice
+    coorEX <- coorEnv$coorEX
     ea.re <- NULL
     ES.num <- NULL
     IR.num <- NULL

@@ -34,6 +34,8 @@ CompGroupAlt <- function(ASdb=NULL,GroupSam=NULL,Ncor=1,
         colnames(ratio.mat)[ncol(ratio.mat)] <- "Diff.P"
         return (ratio.mat)
     }
+    sigEnv <- environment(CalsigGroup)
+    CalsigGroup <- sigEnv$CalsigGroup
     A.groups <- GroupSam$"GroupA"
     B.groups <- GroupSam$"GroupB"
     each.nums <- NULL

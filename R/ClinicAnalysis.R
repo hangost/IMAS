@@ -69,7 +69,8 @@ ClinicAnalysis <- function(ASdb,ClinicalInfo=NULL,CalIndex=NULL,
         }
         return (total.p)
     }
-
+    kmEnv <- environment(kmsur)
+    kmsur <- kmEnv$kmsur
     each.num <- NULL
     registerDoParallel(cores=Ncor) 
     Exon.ratio.mat <- list(as.matrix("NA"),as.matrix("NA"),as.matrix("NA"))

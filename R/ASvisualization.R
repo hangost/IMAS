@@ -331,7 +331,10 @@ ASvisualization <- function(ASdb,CalIndex=NULL,txTable=NULL,exon.range=NULL,
         return (pre.re)
     }
 
-    
+    PEnv <- environment(p.round)
+    p.round <- PEnv$p.round
+    adjEnv <- environment(adjFun)
+    adjFun <- adjEnv$adjFun
     Ratio <- NULL
     Groups <- NULL
     Genotype <- NULL

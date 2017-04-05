@@ -108,6 +108,10 @@ SplicingReads <- function(bamfile=NULL,test.exon=NULL,spli.jun=NULL,
         total.spli.sites <- unique(do.call(rbind,strsplit(spli.jun,"-")))
         colnames(total.spli.sites) <- c("start","end")
     }
+    CoverEnv <- environment(ReadCover)
+    exEnv <- environment(ex.test)
+    ReadCover <- CoverEnv$ReadCover
+    ex.test <- exEnv$ex.test
     final.re <- list(NULL,NULL,NULL)
     names(final.re) <- c("pairedInfo","exonInfo","junctionInfo")
     I.ran <- IRanges(min(as.integer(e.ran)),max(as.integer(e.ran)))
