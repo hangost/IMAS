@@ -1,7 +1,7 @@
 Package: IMAS
 Type: Package
 Title: Integrative analysis of Multi-omics data for Alternative Splicing
-Version: 0.99.12
+Version: 0.99.13
 Author: Seonggyun Han, Younghee Lee
 Maintainer: Seonggyun Han <hangost@ssu.ac.kr>
 Description: Integrative analysis of Multi-omics data for Alternative splicing.
