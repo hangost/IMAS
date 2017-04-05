@@ -57,7 +57,8 @@ MEsQTLFinder <- function(ASdb=NULL,Total.Medata=NULL,Total.Melocus=NULL,
         return    (stac.result)
     }
     sigEnv <- environment(CalSigMe)
-    TestMe <- function(Each.mat,sigEnv,Total.Medata,Total.Melocus,T.cns){
+    TestMe <- function(Each.mat,sigEnv,Total.Medata,
+        Total.Melocus,T.cns,GroupSam){
         if (ncol(Each.mat) == 1)    return (NULL)
         inter.cns <- T.cns[[1]]
         inter.cn <- T.cns[[2]]
@@ -180,9 +181,9 @@ MEsQTLFinder <- function(ASdb=NULL,Total.Medata=NULL,Total.Melocus=NULL,
     Total.Medata <- as.matrix(Total.Medata)
     Total.Melocus <- gsub(" ","",as.matrix(Total.Melocus))
     total.result <- NULL
-    ES.re <- TestMe(T.ra$ES,sigEnv,Total.Medata,Total.Melocus,T.cns)
-    ASS.re <- TestMe(T.ra$ASS,sigEnv,Total.Medata,Total.Melocus,T.cns)
-    IR.re <- TestMe(T.ra$IR,sigEnv,Total.Medata,Total.Melocus,T.cns)
+    ES.re <- TestMe(T.ra$ES,sigEnv,Total.Medata,Total.Melocus,T.cns,GroupSam)
+    ASS.re <- TestMe(T.ra$ASS,sigEnv,Total.Medata,Total.Melocus,T.cns,GroupSam)
+    IR.re <- TestMe(T.ra$IR,sigEnv,Total.Medata,Total.Melocus,T.cns,GroupSam)
     total.list$"ES" <- fdr.cal(unique(ES.re))
     total.list$"ASS" <- fdr.cal(unique(ASS.re))
     total.list$"IR" <- fdr.cal(unique(IR.re))
