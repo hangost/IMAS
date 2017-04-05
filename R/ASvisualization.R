@@ -12,7 +12,7 @@ ASvisualization <- function(ASdb,CalIndex=NULL,txTable=NULL,exon.range=NULL,
         return (p.val.mat)
     }
     PEnv <- environment(p.round)
-    BoxforGroup <- function(te.gro,te.ra,PEnv){
+    BoxforGroup <- function(te.gro,te.ra,PEnv,GroupSam){
         A.nums <- is.element(colnames(te.ra),GroupSam$"GroupA")
         B.nums <- is.element(colnames(te.ra),GroupSam$"GroupB")
         GroupA.exp <- rbind(te.ra[,A.nums])
@@ -31,7 +31,8 @@ ASvisualization <- function(ASdb,CalIndex=NULL,txTable=NULL,exon.range=NULL,
         gplot.result <- list(plot=gplot.result,text=text.box)
         return (gplot.result)
     }
-    BoxforsQTLs <- function(snp.result=NULL,test.snp.mat=NULL,PEnv){
+    BoxforsQTLs <- function(snp.result=NULL,test.snp.mat=NULL,
+        PEnv,CalIndex,snplocus,GroupSam){
         tb.cn <- c("Index","SNP","EnsID","pByGeno","FdrByGeno",
             "pByGroups","FdrByGroups","OR","lowCI","highCI")
         ICOR <- c("OR","lowCI","highCI")
@@ -107,7 +108,7 @@ ASvisualization <- function(ASdb,CalIndex=NULL,txTable=NULL,exon.range=NULL,
         names(snpplots.re) <- rownames(test.snp.mat)
         return (snpplots.re)
     }
-    BoxforMe <- function(test.Me.mat,test.ratio,PEnv){
+    BoxforMe <- function(test.Me.mat,test.ratio,PEnv,methyldata,GroupSam){
         MeExp <- NULL
         cn.ratio <- colnames(test.ratio)
         cn.me <- colnames(methyldata)
@@ -177,7 +178,7 @@ ASvisualization <- function(ASdb,CalIndex=NULL,txTable=NULL,exon.range=NULL,
         names(meplots.re) <- test.Me.mat[,"MeID"]
         return (meplots.re)
         }
-    BoxforClinical <- function(each.index,PEnv){
+    BoxforClinical <- function(each.index,PEnv,ClinicalInfo){
         iep.m <- c("Index","EnsID","Pvalue","Fdr.p")
         p.m <- c("Pvalue","Fdr.p")
         ov.nm <- is.element(colnames(ClinicalAnal),iep.m)
@@ -228,7 +229,7 @@ ASvisualization <- function(ASdb,CalIndex=NULL,txTable=NULL,exon.range=NULL,
         f.mat <- list(adj.gran,omic.mat)
         return (f.mat)
     }
-    test.na <- function(t.mat){
+    test.na <- function(t.mat,CalIndex){
         te1 <- any(which(t.mat != "NA"))
         te2 <- any(length(t.mat))
         TRa <- NULL
@@ -237,7 +238,7 @@ ASvisualization <- function(ASdb,CalIndex=NULL,txTable=NULL,exon.range=NULL,
         }
         return (TRa)
     }
-    adjFun <- function(ea.nm,allcomb){
+    adjFun <- function(ea.nm,allcomb,txTable){
         pre.re <- NULL
         adj.dw <- NULL
         adj.1st <- NULL
@@ -393,11 +394,11 @@ ASvisualization <- function(ASdb,CalIndex=NULL,txTable=NULL,exon.range=NULL,
     
     testASmodel <- rbind(testASmodel[testASmodel[,"Index"] == CalIndex,])
     if (!any(seq_along(testASmodel))) return (NULL)
-    testRatio <- test.na(exonRatio)
-    testsQTLs <- test.na(sQTLs)
-    testMesQTLs <- test.na(MesQTLs)
-    testDiffgroups <- test.na(Diffgroups)
-    testClinical <- test.na(ClinicalAnal)
+    testRatio <- test.na(exonRatio,CalIndex)
+    testsQTLs <- test.na(sQTLs,CalIndex)
+    testMesQTLs <- test.na(MesQTLs,CalIndex)
+    testDiffgroups <- test.na(Diffgroups,CalIndex)
+    testClinical <- test.na(ClinicalAnal,CalIndex)
     
     total.inter.cn <- c("Do_des","1st_des","2nd_des","Up_des",
         "Short_des","Long_des","Neighbor_des","Retain_des")
@@ -523,7 +524,7 @@ ASvisualization <- function(ASdb,CalIndex=NULL,txTable=NULL,exon.range=NULL,
     final.re <- NULL
     each.re <- NULL
     final.re <- lapply(seq_len(nrow(allcomb)),function(ea.nm){
-        each.re <- adjEnv$adjFun(ea.nm,allcomb)
+        each.re <- adjEnv$adjFun(ea.nm,allcomb,txTable)
         each.re
     })
     final.re <- do.call(rbind,final.re)
@@ -726,7 +727,7 @@ ASvisualization <- function(ASdb,CalIndex=NULL,txTable=NULL,exon.range=NULL,
         dnm <- paste("Differential PSI Levels between Conditions for Index ",
             CalIndex,sep="")
         print ("Writing Differential PSI level figure into PDF format")
-        diff.plot <- BoxforGroup(testDiffgroups,testRatio,PEnv)
+        diff.plot <- BoxforGroup(testDiffgroups,testRatio,PEnv,GroupSam)
         text.mat <- cbind(diff.plot$"text",Nofsam=Num.samples)
         text.plot.box <- tableGrob(text.mat,theme = mytheme)
         grid.arrange(diff.plot$"plot",text.plot.box,heights=c(1,0.3),
@@ -735,7 +736,7 @@ ASvisualization <- function(ASdb,CalIndex=NULL,txTable=NULL,exon.range=NULL,
     if (any(length(testsQTLs))){
         print ("Writing sQTLs figure into PDF format")
         s.sQTLs <- rbind(testsQTLs[as.double(testsQTLs[,"FdrByGeno"])<0.05,])
-        sQTLs.plot <- BoxforsQTLs(s.sQTLs,snpdata,PEnv)
+        sQTLs.plot <- BoxforsQTLs(s.sQTLs,snpdata,PEnv,CalIndex,snplocus,GroupSam)
         processing <- lapply(sQTLs.plot,function(each.plot){
             if (length(each.plot)){
                 sq.nm <- paste("sQTLs Results of ",each.plot$"text"[,"SNP"],
@@ -752,7 +753,7 @@ ASvisualization <- function(ASdb,CalIndex=NULL,txTable=NULL,exon.range=NULL,
     if (any(length(testMesQTLs))){
         print ("Writing Me-sQTLs figure into PDF format")
         s.Me <- rbind(testMesQTLs[as.double(testMesQTLs[,"pByMet"]) < 0.05,])
-        ME.plots <- BoxforMe(s.Me,testRatio,PEnv)
+        ME.plots <- BoxforMe(s.Me,testRatio,PEnv,methyldata,GroupSam)
         processing <- lapply(ME.plots,function(each.plot){
             if (length(each.plot)){
                 me.nm <- paste("Me-sQTLs Results of ",
@@ -768,7 +769,7 @@ ASvisualization <- function(ASdb,CalIndex=NULL,txTable=NULL,exon.range=NULL,
     }
     if (any(length(testClinical))){
         print ("Writing Clinical analysis figure into PDF format")
-        Cli.plots <- BoxforClinical(CalIndex,PEnv)
+        Cli.plots <- BoxforClinical(CalIndex,PEnv,ClinicalInfo)
         text.mat <- cbind(Cli.plots$"text",Nofsam=Num.samples)
         text.plot.box <- tableGrob(text.mat,rows=NULL,theme = mytheme)
         text.plot.box$widths <- unit(rep(1/ncol(text.plot.box),
