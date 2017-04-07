@@ -387,8 +387,17 @@ ExonsCluster <- function(ASdb,GTFdb,Ncor=1){
         final.result <- rbind(fi.ES.re,se.ES.re,mxe.ES.re)
         return (final.result)
     }
-    Ncor <- makeCluster(Ncor)
-    registerDoParallel(Ncor)
+    mul.te <- function(alt.num,Alt.gene,AltTe){
+        over.num <- each.mat[,"EnsID"] == Alt.gene[alt.num]
+        Alt.mat <- rbind(each.mat[over.num,])
+        e.ge <- unique(Alt.mat[,"EnsID"])
+        e.str <- unique(Alt.mat[,"Strand"])
+        e.chr <- unique(Alt.mat[,"Nchr"])
+        pre.re <- rbind(AltTe(Alt.mat))
+        pre.re <- cbind(EnsID=e.ge,Nchr=e.chr,Strand=e.str,pre.re)
+        pre.re
+    }
+    parm <- SnowParam(workers=Ncor,type="SOCK")
     trans.intron.range <- intronsByTranscript(GTFdb)
     tx.cns <- c("TXCHROM","TXNAME","GENEID","TXSTART","TXEND","TXSTRAND")
     txTable <- try(select(GTFdb,keys=names(trans.intron.range),
@@ -428,17 +437,9 @@ ExonsCluster <- function(ASdb,GTFdb,Ncor=1){
     names(total.list) <- c("ES","ASS","IR")
     if(any(seq_along(ES.gene))){
         each.mat <- Alt.splice.result$ES
-        each.re <- foreach(alt.num=seq_along(ES.gene),
-            .packages=called.packages,.combine=rbind) %dopar% {
-            over.num <- each.mat[,"EnsID"] == ES.gene[alt.num]
-            Alt.mat <- rbind(each.mat[over.num,])
-            e.ge <- unique(Alt.mat[,"EnsID"])
-            e.str <- unique(Alt.mat[,"Strand"])
-            e.chr <- unique(Alt.mat[,"Nchr"])
-            pre.re <- rbind(ESAltTe(Alt.mat))
-            pre.re <- cbind(EnsID=e.ge,Nchr=e.chr,Strand=e.str,pre.re)
-            pre.re
-        }
+        each.re  <- bplapply(seq_along(ES.gene),mul.te,BPPARAM=parm,
+            Alt.gene=ES.gene,AltTe=ESAltTe)
+        each.re <- do.call(rbind,each.re)
         if (length(each.re)){
             each.re <- out.fun(each.re,"ES")
             total.list$"ES" <- each.re
@@ -446,17 +447,9 @@ ExonsCluster <- function(ASdb,GTFdb,Ncor=1){
     }    
     if(any(seq_along(ASS.gene))){
         each.mat <- Alt.splice.result$ASS
-        each.re <- foreach(alt.num=seq_along(ASS.gene),
-            .packages=called.packages,.combine=rbind) %dopar% {
-            over.num <- each.mat[,"EnsID"] == ASS.gene[alt.num]
-            Alt.mat <- rbind(each.mat[over.num,])
-            e.ge <- unique(Alt.mat[,"EnsID"])
-            e.str <- unique(Alt.mat[,"Strand"])
-            e.chr <- unique(Alt.mat[,"Nchr"])
-            pre.re <- rbind(ASSAltTe(Alt.mat))
-            pre.re <- cbind(EnsID=e.ge,Nchr=e.chr,Strand=e.str,pre.re)
-            pre.re
-        }
+        each.re  <- bplapply(seq_along(ES.gene),mul.te,BPPARAM=parm,
+            Alt.gene=ASS.gene,AltTe=ASSAltTe)
+        each.re <- do.call(rbind,each.re)
         if (length(each.re)){
             each.re <- out.fun(each.re,"ASS")
             total.list$"ASS" <- each.re
@@ -464,17 +457,9 @@ ExonsCluster <- function(ASdb,GTFdb,Ncor=1){
     }
     if(any(seq_along(IR.gene))){
         each.mat <- Alt.splice.result$IR
-        each.re <- foreach(alt.num=seq_along(IR.gene),
-            .packages=called.packages,.combine=rbind) %dopar% {
-            over.num <- each.mat[,"EnsID"] == IR.gene[alt.num]
-            Alt.mat <- rbind(each.mat[over.num,])
-            e.ge <- unique(Alt.mat[,"EnsID"])
-            e.str <- unique(Alt.mat[,"Strand"])
-            e.chr <- unique(Alt.mat[,"Nchr"])
-            pre.re <- rbind(IRAltTe(Alt.mat))
-            pre.re <- cbind(EnsID=e.ge,Nchr=e.chr,Strand=e.str,pre.re)
-            pre.re
-        }
+        each.re  <- bplapply(seq_along(ES.gene),mul.te,BPPARAM=parm,
+            Alt.gene=IR.gene,AltTe=IRAltTe)
+        each.re <- do.call(rbind,each.re)
         if (length(each.re)){
             each.re <- out.fun(each.re,"IR")
             total.list$"IR" <- each.re
@@ -483,6 +468,5 @@ ExonsCluster <- function(ASdb,GTFdb,Ncor=1){
     ASdb <- new("ASdb",SplicingModel=total.list,Ratio=ASdb@"Ratio",
         GroupDiff=ASdb@"GroupDiff",sQTLs=ASdb@"sQTLs",
         Me.sQTLs=ASdb@"Me.sQTLs",Clinical=ASdb@"Clinical")
-    stopCluster(Ncor)
     return (ASdb)
 }

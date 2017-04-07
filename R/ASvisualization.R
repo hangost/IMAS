@@ -64,7 +64,7 @@ ASvisualization <- function(ASdb,CalIndex=NULL,txTable=NULL,exon.range=NULL,
                 gplot.result <- ggplot(T.Ra,aes(x=Genotype,y=Ratio,
                     fill=Genotype))+geom_boxplot(width=0.3)+
                     geom_jitter(width = 0.03)
-                gplot.result <- list(plot=gplot.result,text=text.box)
+                gplot.result <- list(plot=gplot.result,text=rbind(text.box))
                 gplot.result
             }
             else if (any(G.test)){
@@ -90,7 +90,7 @@ ASvisualization <- function(ASdb,CalIndex=NULL,txTable=NULL,exon.range=NULL,
                     theme(plot.title = element_text(vjust = 0))
                 gplot.result <- arrangeGrob(AG,BG,ncol=2)
                 text.box[,ICOR] <- round(as.double(text.box[,ICOR]),3)
-                gplot.result <- list(plot=gplot.result,text=text.box)
+                gplot.result <- list(plot=gplot.result,text=rbind(text.box))
                 gplot.result
             }
         return (gplot.result)
@@ -134,7 +134,7 @@ ASvisualization <- function(ASdb,CalIndex=NULL,txTable=NULL,exon.range=NULL,
                 colnames(me.ratio) <- c("Ratio","MeExp")
                 gplot.result <- ggplot(data=me.ratio,aes(x=MeExp,
                     y=Ratio))+geom_point()+ylim(c(0,1))
-                gplot.result <- list(plot=gplot.result,text=text.box)
+                gplot.result <- list(plot=gplot.result,text=rbind(text.box))
             }
             else if (any(G.test)) {
                 me.ratio <- cbind(me.ratio,group="group")

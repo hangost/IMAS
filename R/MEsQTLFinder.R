@@ -58,7 +58,7 @@ MEsQTLFinder <- function(ASdb=NULL,Total.Medata=NULL,Total.Melocus=NULL,
     }
     sigEnv <- environment(CalSigMe)
     TestMe <- function(Each.mat,sigEnv,Total.Medata,
-        Total.Melocus,T.cns,GroupSam){
+        Total.Melocus,T.cns,GroupSam,parm){
         if (ncol(Each.mat) == 1)    return (NULL)
         inter.cns <- T.cns[[1]]
         inter.cn <- T.cns[[2]]
@@ -78,8 +78,7 @@ MEsQTLFinder <- function(ASdb=NULL,Total.Medata=NULL,Total.Melocus=NULL,
         if (any(te)){
             over.sam <- intersect(colnames(Each.mat),colnames(sub.Meda))
             i=1
-            pa.result <- foreach(i=seq_len(nrow(Each.mat)),
-                .packages=called.packages,.combine=rbind) %dopar% {
+            mulme <- function(i){
                 test.mat <- rbind(Each.mat[i,])
                 test.exp <- rbind(test.mat[,over.sam])
                 ex.re <- test.mat[,is.element(colnames(test.mat),inter.cns)]
@@ -120,6 +119,8 @@ MEsQTLFinder <- function(ASdb=NULL,Total.Medata=NULL,Total.Melocus=NULL,
                 }
                 else {NULL}
             }
+            pa.result <- bplapply(seq_len(nrow(Each.mat)),mulme,BPPARAM=parm)
+            pa.result <- do.call(rbind,pa.result)
             if (any(length(pa.result))){
                 colnames(pa.result)[1] <- "MeID"
                 if (is.element("p.ma",colnames(pa.result))){
@@ -148,8 +149,7 @@ MEsQTLFinder <- function(ASdb=NULL,Total.Medata=NULL,Total.Melocus=NULL,
         return (each.result)
     }
     na.mat <- as.matrix("NA")
-    Ncor <- makeCluster(Ncor)
-    registerDoParallel(Ncor)
+    parm <- SnowParam(workers=Ncor,type="SOCK")
     called.packages <- c("lme4","GenomicRanges","GenomicFeatures")
     inter.cns <- c("DownEX","UpEX","ShortEX","LongEX","NeighborEX",
         "ShortNeighborEX","LongNeighborEX")
@@ -182,9 +182,9 @@ MEsQTLFinder <- function(ASdb=NULL,Total.Medata=NULL,Total.Melocus=NULL,
     Total.Medata <- as.matrix(Total.Medata)
     Total.Melocus <- gsub(" ","",as.matrix(Total.Melocus))
     total.result <- NULL
-    ES.re <- TestMe(T.ra$ES,sigEnv,Total.Medata,Total.Melocus,T.cns,GroupSam)
-    ASS.re <- TestMe(T.ra$ASS,sigEnv,Total.Medata,Total.Melocus,T.cns,GroupSam)
-    IR.re <- TestMe(T.ra$IR,sigEnv,Total.Medata,Total.Melocus,T.cns,GroupSam)
+    ES.re <- TestMe(T.ra$ES,sigEnv,Total.Medata,Total.Melocus,T.cns,GroupSam,parm)
+    ASS.re <- TestMe(T.ra$ASS,sigEnv,Total.Medata,Total.Melocus,T.cns,GroupSam,parm)
+    IR.re <- TestMe(T.ra$IR,sigEnv,Total.Medata,Total.Melocus,T.cns,GroupSam,parm)
     total.list$"ES" <- fdr.cal(unique(ES.re))
     total.list$"ASS" <- fdr.cal(unique(ASS.re))
     total.list$"IR" <- fdr.cal(unique(IR.re))
@@ -201,7 +201,6 @@ MEsQTLFinder <- function(ASdb=NULL,Total.Medata=NULL,Total.Melocus=NULL,
         write.table(total.list[["IR"]],
             paste(p.out,"/IR_Me-sQTLs.txt",sep=""),sep='\t',quote=FALSE)
     }
-    stopCluster(Ncor)
     return (ASdb)
 }
 

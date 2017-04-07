@@ -46,11 +46,10 @@ ClinicAnalysis <- function(ASdb,ClinicalInfo=NULL,CalIndex=NULL,
         return(pv)
     }
     kmEnv <- environment(kmsur)
-    p.cal <- function(test.mat,ClinicalInfo,kmEnv,display){
+    p.cal <- function(test.mat,ClinicalInfo,kmEnv,display,parm){
         t.sam <- nrow(ClinicalInfo)
         ea.re <- test.mat
-        total.p <- foreach(each.num=seq_len(nrow(ea.re)),
-            .packages=called.packages,.combine=rbind) %dopar% {
+        muls <- function(each.num){
             Pv <- NULL
             ea.ra <- rbind(ea.re[each.num,])
             p.r <- ea.ra[!is.element(colnames(ea.ra),rownames(ClinicalInfo))]
@@ -65,15 +64,19 @@ ClinicAnalysis <- function(ASdb,ClinicalInfo=NULL,CalIndex=NULL,
             }
             else    Pv
         }
+        total.p <- bplapply(seq_len(nrow(ea.re)),muls,BPPARAM=parm)
         if (!display & length(total.p)){
-            cn.test <- !is.element(colnames(ea.re),rownames(ClinicalInfo))
-            colnames(total.p) <- c(colnames(ea.re)[cn.test],"Pvalue")
+            total.p <- do.call(rbind,total.p)
+            if (length(total.p)){
+                cn.test <- !is.element(colnames(ea.re),rownames(ClinicalInfo))
+                colnames(total.p) <- c(colnames(ea.re)[cn.test],"Pvalue")
+            }
         }
+        else if (display)    return (total.p[[1]])
         return (total.p)
     }
     each.num <- NULL
-    Ncor <- makeCluster(Ncor)
-    registerDoParallel(Ncor) 
+    parm <- SnowParam(workers=Ncor,type="SOCK")
     Exon.ratio.mat <- list(as.matrix("NA"),as.matrix("NA"),as.matrix("NA"))
     names(Exon.ratio.mat) <- c("ES","ASS","IR")
     clinical.mat <- Exon.ratio.mat
@@ -99,9 +102,9 @@ ClinicAnalysis <- function(ASdb,ClinicalInfo=NULL,CalIndex=NULL,
     }
     else    Exon.ratio.mat <- ASdb@Ratio
     called.packages <- c("lme4","GenomicRanges","GenomicFeatures")
-    ES.re <- p.cal(Exon.ratio.mat$"ES",ClinicalInfo,kmEnv,display)
-    ASS.re <- p.cal(Exon.ratio.mat$"ASS",ClinicalInfo,kmEnv,display)
-    IR.re <- p.cal(Exon.ratio.mat$"IR",ClinicalInfo,kmEnv,display)
+    ES.re <- p.cal(Exon.ratio.mat$"ES",ClinicalInfo,kmEnv,display,parm)
+    ASS.re <- p.cal(Exon.ratio.mat$"ASS",ClinicalInfo,kmEnv,display,parm)
+    IR.re <- p.cal(Exon.ratio.mat$"IR",ClinicalInfo,kmEnv,display,parm)
     pre.result <- list(ES.re,ASS.re,IR.re)
     names(pre.result) <- c("ES","ASS","IR")
     total.types <- names(pre.result)
@@ -145,7 +148,6 @@ ClinicAnalysis <- function(ASdb,ClinicalInfo=NULL,CalIndex=NULL,
         write.table(clinical.mat[["IR"]],
             paste(p.out,"IR_Survival.txt",sep=""),sep='\t',quote=FALSE)
     }
-    stopCluster(Ncor) 
     return (ASdb)
 }
 

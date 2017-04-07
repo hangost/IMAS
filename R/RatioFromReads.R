@@ -168,10 +168,8 @@ RatioFromReads <- function(ASdb=NULL,Total.bamfiles=NULL,readsInfo=
             }
         return (group.1.2.ratio)
     }
-    splitEnv <- environment(splitSplice)
-    cEnv <- environment(coorEX)
     Each.Cal.ratio <- function(bamfiles=NULL,splicingInfo=NULL,
-        splitEnv,cEnv,ins,minr,readLen,readsInfo){
+        splitEnv,cEnv,ins,minr,readLen,readsInfo,parm){
         ExReads <- function(t.ex,t.sp,g.e1,g.e2,g1,g2,s1,s2,
             ch,er,met,alt,ins,minr){
             coor.re <- NULL
@@ -190,6 +188,154 @@ RatioFromReads <- function(ASdb=NULL,Total.bamfiles=NULL,readsInfo=
         pre.bam.re[is.na(pre.bam.re)] <- "NA"
         return (pre.bam.re)
         }
+        ES.fi <- function(ES.num){
+            ES.re <- rbind(ES.fi.result[ES.num,])
+            e.dw.st <- do.call(rbind,strsplit(ES.re[,"DownEX"],"-"))
+            e.up.en <- do.call(rbind,strsplit(ES.re[,"UpEX"],"-"))
+            each.ran <- rbind(unique(cbind(e.dw.st[,1],e.up.en[,2])))
+            fi.pr <- paste(ES.re[,c("DownEX","1stEX")],collapse="~")
+            se.pr <- paste(ES.re[,c("1stEX","UpEX")],collapse="~")
+            g.1.p <- rbind(fi.pr,se.pr)
+            g.2.p <- paste(ES.re[,c("DownEX","UpEX")],collapse="~")
+            fi.s1 <- splitEnv$splitSplice(ES.re[,"Do_des"],ES.re[,"1st_des"])
+            fi.s2 <- splitEnv$splitSplice(ES.re[,"1st_des"],ES.re[,"Up_des"])
+            g.1.s <- c(fi.s1,fi.s2)
+            g.2.s <- splitEnv$splitSplice(ES.re[,"Do_des"],ES.re[,"Up_des"])
+            t.ex <- ES.re[,c("DownEX","1stEX","UpEX")]
+            t.sp <- c(g.1.s,g.2.s)
+            e.chr <- unique(ES.re[,"Nchr"])
+            pr.re <- ExReads(t.ex,t.sp,t.ex,t.ex,g.1.p,g.2.p,
+                g.1.s,g.2.s,e.chr,each.ran,readsInfo,"ES",ins,minr)
+            pr.re
+        }
+        ES.se <- function(ES.num){
+            ES.re <- rbind(ES.se.result[ES.num,])
+            do.st <- strsplit(ES.re[,"DownEX"],"-")
+            up.en <- strsplit(ES.re[,"UpEX"],"-")
+            do.st <- do.call(rbind,do.st)[,1]
+            up.en <- do.call(rbind,up.en)[,2]
+            each.ran <- rbind(unique(cbind(do.st,up.en)))
+            fi.pr <- paste(ES.re[,c("DownEX","1stEX")],collapse="~")
+            se.pr <- paste(ES.re[,c("1stEX","2ndEX")],collapse="~")
+            th.pr <- paste(ES.re[,c("2ndEX","UpEX")],collapse="~")
+            g.1.p <- rbind(fi.pr,se.pr,th.pr)
+            g.2.p <- paste(ES.re[,c("DownEX","UpEX")],collapse="~")
+            fi.s1 <- splitEnv$splitSplice(ES.re[,"Do_des"],ES.re[,"1st_des"])
+            fis2 <- splitEnv$splitSplice(ES.re[,"1st_des"],ES.re[,"2nd_des"])
+            fi.s3 <- splitEnv$splitSplice(ES.re[,"2nd_des"],ES.re[,"Up_des"])
+            g.1.s <- c(fi.s1,fis2,fi.s3)
+            g.2.s <- splitEnv$splitSplice(ES.re[,"Do_des"],ES.re[,"Up_des"])
+            t.sp <- c(g.1.s,g.2.s)
+            t.ex <- c(ES.re[,"DownEX"],ES.re[,"1stEX"],
+                ES.re[,"2ndEX"],ES.re[,"UpEX"])
+            e.chr <- unique(ES.re[,"Nchr"])
+            pr.re <- ExReads(t.ex,t.sp,t.ex,t.ex,g.1.p,g.2.p,
+                g.1.s,g.2.s,e.chr,each.ran,readsInfo,"ESse",ins,minr)
+            pr.re
+        }
+        MXE.te <- function(ES.num){
+            ES.re <- rbind(MXE.result[ES.num,])
+            do.st <- do.call(rbind,strsplit(ES.re[,"DownEX"],"-"))
+            up.en <- do.call(rbind,strsplit(ES.re[,"UpEX"],"-"))
+            do.st <- do.st[,1]
+            up.en <- up.en[,2]
+            each.ran <- rbind(unique(cbind(do.st,up.en)))
+            fi.p.1 <- paste(ES.re[,c("DownEX","1stEX")],collapse="~")
+            fi.p.2 <- paste(ES.re[,c("DownEX","2ndEX")],collapse="~")
+            se.p.1 <- paste(ES.re[,c("1stEX","UpEX")],collapse="~")
+            se.p.2 <- paste(ES.re[,c("2ndEX","UpEX")],collapse="~")
+            g.1.p <- rbind(fi.p.1,se.p.1)
+            g.2.p <- rbind(fi.p.2,se.p.2)
+            fi.s1 <- splitEnv$splitSplice(ES.re[,"Do_des"],ES.re[,"1st_des"])
+            fi.s2 <- splitEnv$splitSplice(ES.re[,"1st_des"],ES.re[,"Up_des"])
+            se.s1 <- splitEnv$splitSplice(ES.re[,"Do_des"],ES.re[,"2nd_des"])
+            se.s2 <- splitEnv$splitSplice(ES.re[,"2nd_des"],ES.re[,"Up_des"])
+            g.1.s <- c(fi.s1,fi.s2)
+            g.2.s <- c(se.s1,se.s2)
+            t.sp <- c(g.1.s,g.2.s)
+            g.1.e <- c(ES.re[,"DownEX"],ES.re[,"1stEX"],
+            ES.re[,"UpEX"])
+            g.2.e <- c(ES.re[,"DownEX"],ES.re[,"2ndEX"],
+                ES.re[,"UpEX"])
+            t.ex <- ES.re[,c("DownEX","1stEX","2ndEX","UpEX")]
+            e.chr <- unique(ES.re[,"Nchr"])
+            pr.re <- ExReads(t.ex,t.sp,g.1.e,g.2.e,g.1.p,g.2.p,
+                g.1.s,g.2.s,e.chr,each.ran,readsInfo,"MXE",ins,minr)
+            pr.re
+        }
+        IR.te <- function(IR.num){
+            ea.re <- rbind(IR.re[IR.num,])
+            s.down <- strsplit(ea.re[,"DownEX"],"-")
+            s.up <- strsplit(ea.re[,"UpEX"],"-")
+            ex.sp <- paste(unlist(s.down)["DownEX2"],
+                unlist(s.up)["UpEX1"],sep="-")
+            do.st <- do.call(rbind,s.down)[,1]
+            up.en <- do.call(rbind,s.up)[,2]
+            each.ran <- rbind(unique(cbind(do.st,up.en)))
+            g.1.p <- paste(ea.re[,c("DownEX","UpEX")],collapse="~")
+            g.1.p <- rbind(g.1.p)
+            fi.pr.2 <- paste(c(ea.re[,"DownEX"],ex.sp),collapse="~")
+            se.pr.2 <- paste(c(ex.sp,IR.re[,"UpEX"]),collapse="~")
+            g.2.p <- rbind(fi.pair.2,se.pair.2)
+            g.1.s <- c(splitEnv$splitSplice(ea.re[,"Do_des"],ea.re[,"Up_des"]))
+            g.2.s <- "NA"
+            t.ex <- c(ea.re[,"DownEX"],ex.sp,ea.re[,"UpEX"])
+            e.chr <- unique(ea.re[,"Nchr"])
+            pr.re <- ExReads(t.ex,g.1.s,t.ex,t.ex,g.1.p,g.2.p,
+                g.1.s,g.2.s,e.chr,each.ran,"exon","IR",ins,minr)
+            pr.re
+        }
+        ASS.te <- function(ASS.num){
+            ea.ty <- ASS.result[ASS.num,"Types"]
+            ea.re <- rbind(ASS.result[ASS.num,])
+            nei.info <- grep("NeighborEX",colnames(ea.re))
+            ASS.nei <- unlist(strsplit(ea.re[,nei.info],"-"))
+            sh.ex <- unlist(strsplit(ea.re[,"ShortEX"],"-"))
+            lo.ex <- unlist(strsplit(ea.re[,"LongEX"],"-"))
+            sh.ex.1 <- sh.ex["ShortEX1"]
+            sh.ex.2 <- sh.ex["ShortEX2"]
+            lo.ex.1 <- lo.ex["LongEX1"]
+            lo.ex.2 <- lo.ex["LongEX2"]
+            ASS.cn <- colnames(ea.re)
+            lo.nei <- ea.re[,is.element(ASS.cn,lo.nm)]
+            sh.nei <- ea.re[,is.element(ASS.cn,sh.nm)]
+            lo.des <- ea.re[,is.element(ASS.cn,lo.des.nm)]
+            sh.des <- ea.re[,is.element(ASS.cn,sh.des.nm)]
+            if (ea.ty == "A5SS"){
+                min.r <- max(as.integer(sh.ex)) - 20
+                max.r <- min(as.integer(c(ASS.nei))) + 20
+                ASS.sp <- paste(sh.ex.2,lo.ex.2,sep="-")
+                names(ASS.sp) <- "Alt.ex"
+                g.2.p <- c(ea.re[,"ShortEX"],sh.nei)
+                g.2.p <- rbind(paste(g.2.p,collapse="~"))
+                g.1.s <- c(splitEnv$splitSplice(ea.re[,"Long_des"],lo.des))
+                g.2.s <- c(splitEnv$splitSplice(ea.re[,"Short_des"],sh.des))
+                g.1.e <- c(ASS.sp,sh.nei)
+                g.2.e <- c(ASS.sp,lo.nei)
+                t.ex <- c(ASS.sp,lo.nei)
+            }
+            else if (ea.ty == "A3SS"){
+                max.r <- min(as.integer(sh.ex)) + 20
+                min.r <- max(as.integer(c(ASS.nei))) - 20
+                ASS.sp <- paste(lo.ex.1,sh.ex.1,sep="-")
+                names(ASS.sp) <- "Alt.ex"
+                g.2.p <- c(sh.nei,ea.re[,"ShortEX"])
+                g.2.p <- rbind(paste(g.2.p,collapse="~"))
+                g.1.s <- c(splitEnv$splitSplice(lo.des,ea.re[,"Long_des"]))
+                g.2.s <- c(splitEnv$splitSplice(sh.des,ea.re[,"Short_des"]))
+                g.1.e <- c(sh.nei,ASS.sp)
+                g.2.e <- c(lo.nei,ASS.sp)
+                t.ex <- c(lo.nei,ASS.sp)
+            }
+            each.ran <- cbind(min.r,max.r)
+            colnames(each.ran) <- c("start","end")
+            g.1.p <- NULL
+            t.sp <- c(g.1.s,g.2.s)
+            e.chr <- unique(ea.re[,"Nchr"])
+            pr.re <- ExReads(t.ex,g.1.s,g.1.e,g.2.e,g.1.p,g.2.p,
+                g.1.s,g.2.s,e.chr,each.ran,"exon","ASS",ins,minr)
+            pr.re
+            }
         if (!any(length(splicingInfo))) return (NULL)
         final.ES.result <- NULL
         final.ASS.result <- NULL
@@ -211,27 +357,8 @@ RatioFromReads <- function(ASdb=NULL,Total.bamfiles=NULL,readsInfo=
             position.range <- rbind(unique(cbind(do.st,up.en)))
             colnames(position.range) <- c("start","end")
             if (any(seq_len(nrow(ES.fi.result)))){
-                ES.fi.r <- foreach(ES.num=seq_len(nrow(ES.fi.result)),
-                    .packages=called.packages,.combine=rbind) %dopar% {
-                    ES.re <- rbind(ES.fi.result[ES.num,])
-                    e.dw.st <- do.call(rbind,strsplit(ES.re[,"DownEX"],"-"))
-                    e.up.en <- do.call(rbind,strsplit(ES.re[,"UpEX"],"-"))
-                    each.ran <- rbind(unique(cbind(e.dw.st[,1],e.up.en[,2])))
-                    fi.pr <- paste(ES.re[,c("DownEX","1stEX")],collapse="~")
-                    se.pr <- paste(ES.re[,c("1stEX","UpEX")],collapse="~")
-                    g.1.p <- rbind(fi.pr,se.pr)
-                    g.2.p <- paste(ES.re[,c("DownEX","UpEX")],collapse="~")
-                    fi.s1 <- splitEnv$splitSplice(ES.re[,"Do_des"],ES.re[,"1st_des"])
-                    fi.s2 <- splitEnv$splitSplice(ES.re[,"1st_des"],ES.re[,"Up_des"])
-                    g.1.s <- c(fi.s1,fi.s2)
-                    g.2.s <- splitEnv$splitSplice(ES.re[,"Do_des"],ES.re[,"Up_des"])
-                    t.ex <- ES.re[,c("DownEX","1stEX","UpEX")]
-                    t.sp <- c(g.1.s,g.2.s)
-                    e.chr <- unique(ES.re[,"Nchr"])
-                    pr.re <- ExReads(t.ex,t.sp,t.ex,t.ex,g.1.p,g.2.p,
-                        g.1.s,g.2.s,e.chr,each.ran,readsInfo,"ES",ins,minr)
-                    pr.re
-                }
+                ES.fi.r <- bplapply(seq_len(nrow(ES.fi.result)),ES.fi,BPPARAM=parm)
+                ES.fi.r <- do.call(rbind,ES.fi.r)
                 fi.re <- cbind(rbind(ES.fi.result[,c("Index","EnsID","Nchr",
                     "1stEX","2ndEX","DownEX","UpEX","Types")]),ES.fi.r)
                 colnames(fi.re) <- c("Index","EnsID","Nchr","1stEX",
@@ -239,32 +366,8 @@ RatioFromReads <- function(ASdb=NULL,Total.bamfiles=NULL,readsInfo=
                 f.fi.result <- fi.re
             }
             if (any(seq_len(nrow(ES.se.result)))){
-                ES.se.r <- foreach(ES.num=seq_len(nrow(ES.se.result)),
-                    .packages=called.packages,.combine=rbind) %dopar% {
-                    ES.re <- rbind(ES.se.result[ES.num,])
-                    do.st <- strsplit(ES.re[,"DownEX"],"-")
-                    up.en <- strsplit(ES.re[,"UpEX"],"-")
-                    do.st <- do.call(rbind,do.st)[,1]
-                    up.en <- do.call(rbind,up.en)[,2]
-                    each.ran <- rbind(unique(cbind(do.st,up.en)))
-                    fi.pr <- paste(ES.re[,c("DownEX","1stEX")],collapse="~")
-                    se.pr <- paste(ES.re[,c("1stEX","2ndEX")],collapse="~")
-                    th.pr <- paste(ES.re[,c("2ndEX","UpEX")],collapse="~")
-                    g.1.p <- rbind(fi.pr,se.pr,th.pr)
-                    g.2.p <- paste(ES.re[,c("DownEX","UpEX")],collapse="~")
-                    fi.s1 <- splitEnv$splitSplice(ES.re[,"Do_des"],ES.re[,"1st_des"])
-                    fis2 <- splitEnv$splitSplice(ES.re[,"1st_des"],ES.re[,"2nd_des"])
-                    fi.s3 <- splitEnv$splitSplice(ES.re[,"2nd_des"],ES.re[,"Up_des"])
-                    g.1.s <- c(fi.s1,fis2,fi.s3)
-                    g.2.s <- splitEnv$splitSplice(ES.re[,"Do_des"],ES.re[,"Up_des"])
-                    t.sp <- c(g.1.s,g.2.s)
-                    t.ex <- c(ES.re[,"DownEX"],ES.re[,"1stEX"],
-                        ES.re[,"2ndEX"],ES.re[,"UpEX"])
-                    e.chr <- unique(ES.re[,"Nchr"])
-                    pr.re <- ExReads(t.ex,t.sp,t.ex,t.ex,g.1.p,g.2.p,
-                        g.1.s,g.2.s,e.chr,each.ran,readsInfo,"ESse",ins,minr)
-                    pr.re
-                }
+                ES.se.r <- bplapply(seq_len(nrow(ES.se.result)),ES.se,BPPARAM=parm)
+                ES.se.r <- do.call(rbind,ES.se.r)
                 se.re <- cbind(rbind(ES.se.result[,c("Index","EnsID","Nchr",
                     "1stEX","2ndEX","DownEX","UpEX","Types")]),ES.se.r)
                 colnames(se.re) <- c("Index","EnsID","Nchr","1stEX",
@@ -272,37 +375,8 @@ RatioFromReads <- function(ASdb=NULL,Total.bamfiles=NULL,readsInfo=
                 f.se.result <- se.re
             }
             if (any(seq_len(nrow(MXE.result)))){
-                MXE.ratio <- foreach(ES.num=seq_len(nrow(MXE.result)),
-                    .packages=called.packages,.combine=rbind) %dopar% {
-                    ES.re <- rbind(MXE.result[ES.num,])
-                    do.st <- do.call(rbind,strsplit(ES.re[,"DownEX"],"-"))
-                    up.en <- do.call(rbind,strsplit(ES.re[,"UpEX"],"-"))
-                    do.st <- do.st[,1]
-                    up.en <- up.en[,2]
-                    each.ran <- rbind(unique(cbind(do.st,up.en)))
-                    fi.p.1 <- paste(ES.re[,c("DownEX","1stEX")],collapse="~")
-                    fi.p.2 <- paste(ES.re[,c("DownEX","2ndEX")],collapse="~")
-                    se.p.1 <- paste(ES.re[,c("1stEX","UpEX")],collapse="~")
-                    se.p.2 <- paste(ES.re[,c("2ndEX","UpEX")],collapse="~")
-                    g.1.p <- rbind(fi.p.1,se.p.1)
-                    g.2.p <- rbind(fi.p.2,se.p.2)
-                    fi.s1 <- splitEnv$splitSplice(ES.re[,"Do_des"],ES.re[,"1st_des"])
-                    fi.s2 <- splitEnv$splitSplice(ES.re[,"1st_des"],ES.re[,"Up_des"])
-                    se.s1 <- splitEnv$splitSplice(ES.re[,"Do_des"],ES.re[,"2nd_des"])
-                    se.s2 <- splitEnv$splitSplice(ES.re[,"2nd_des"],ES.re[,"Up_des"])
-                    g.1.s <- c(fi.s1,fi.s2)
-                    g.2.s <- c(se.s1,se.s2)
-                    t.sp <- c(g.1.s,g.2.s)
-                    g.1.e <- c(ES.re[,"DownEX"],ES.re[,"1stEX"],
-                        ES.re[,"UpEX"])
-                    g.2.e <- c(ES.re[,"DownEX"],ES.re[,"2ndEX"],
-                        ES.re[,"UpEX"])
-                    t.ex <- ES.re[,c("DownEX","1stEX","2ndEX","UpEX")]
-                    e.chr <- unique(ES.re[,"Nchr"])
-                    pr.re <- ExReads(t.ex,t.sp,g.1.e,g.2.e,g.1.p,g.2.p,
-                        g.1.s,g.2.s,e.chr,each.ran,readsInfo,"MXE",ins,minr)
-                    pr.re
-                }
+                MXE.ratio <- bplapply(seq_len(nrow(MXE.result)),MXE.te,BPPARAM=parm)
+                MXE.ratio <- do.call(rbind,MXE.ratio)
                 MXE.re <- cbind(rbind(MXE.result[,c("Index","EnsID","Nchr",
                     "1stEX","2ndEX","DownEX","UpEX","Types")]),MXE.ratio)
                 colnames(MXE.re) <- c("Index","EnsID","Nchr","1stEX",
@@ -319,29 +393,8 @@ RatioFromReads <- function(ASdb=NULL,Total.bamfiles=NULL,readsInfo=
             up.en <- do.call(rbind,strsplit(IR.re[,"UpEX"],"-"))[,2]
             position.range <- rbind(unique(cbind(do.st,up.en)))
             colnames(position.range) <- c("start","end")
-            IR.ratio <- foreach(IR.num=seq_len(nrow(IR.re)),
-                .packages=called.packages,.combine=rbind) %dopar% {
-                ea.re <- rbind(IR.re[IR.num,])
-                s.down <- strsplit(ea.re[,"DownEX"],"-")
-                s.up <- strsplit(ea.re[,"UpEX"],"-")
-                ex.sp <- paste(unlist(s.down)["DownEX2"],
-                    unlist(s.up)["UpEX1"],sep="-")
-                do.st <- do.call(rbind,s.down)[,1]
-                up.en <- do.call(rbind,s.up)[,2]
-                each.ran <- rbind(unique(cbind(do.st,up.en)))
-                g.1.p <- paste(ea.re[,c("DownEX","UpEX")],collapse="~")
-                g.1.p <- rbind(g.1.p)
-                fi.pr.2 <- paste(c(ea.re[,"DownEX"],ex.sp),collapse="~")
-                se.pr.2 <- paste(c(ex.sp,IR.re[,"UpEX"]),collapse="~")
-                g.2.p <- rbind(fi.pair.2,se.pair.2)
-                g.1.s <- c(splitEnv$splitSplice(ea.re[,"Do_des"],ea.re[,"Up_des"]))
-                g.2.s <- "NA"
-                t.ex <- c(ea.re[,"DownEX"],ex.sp,ea.re[,"UpEX"])
-                e.chr <- unique(ea.re[,"Nchr"])
-                pr.re <- ExReads(t.ex,g.1.s,t.ex,t.ex,g.1.p,g.2.p,
-                        g.1.s,g.2.s,e.chr,each.ran,"exon","IR",ins,minr)
-                pr.re
-            }
+            IR.ratio <- bplapply(seq_len(nrow(IR.re)),IR.te,BPPARAM=parm)
+            IR.ratio <- do.call(rbind,IR.ratio)
             IR.result <- cbind(rbind(IR.result[,c("Index","EnsID","Nchr",
                 "RetainEX","DownEX","UpEX","Types")]),IR.ratio)
             colnames(IR.result) <- c("Index","EnsID","Nchr","RetainEX",
@@ -360,58 +413,8 @@ RatioFromReads <- function(ASdb=NULL,Total.bamfiles=NULL,readsInfo=
             ASS.result <- splicingInfo[["ASS"]]
             ASS.num <- grep("A[0-9]SS",ASS.result[,"Types"])
             ASS.re <- rbind(ASS.result[ASS.num,])
-            ASS.ratio <- foreach(ASS.num=seq_len(nrow(ASS.re)),
-                .packages=called.packages,.combine=rbind) %dopar% {
-                ea.ty <- ASS.result[ASS.num,"Types"]
-                ea.re <- rbind(ASS.result[ASS.num,])
-                nei.info <- grep("NeighborEX",colnames(ea.re))
-                ASS.nei <- unlist(strsplit(ea.re[,nei.info],"-"))
-                sh.ex <- unlist(strsplit(ea.re[,"ShortEX"],"-"))
-                lo.ex <- unlist(strsplit(ea.re[,"LongEX"],"-"))
-                sh.ex.1 <- sh.ex["ShortEX1"]
-                sh.ex.2 <- sh.ex["ShortEX2"]
-                lo.ex.1 <- lo.ex["LongEX1"]
-                lo.ex.2 <- lo.ex["LongEX2"]
-                ASS.cn <- colnames(ea.re)
-                lo.nei <- ea.re[,is.element(ASS.cn,lo.nm)]
-                sh.nei <- ea.re[,is.element(ASS.cn,sh.nm)]
-                lo.des <- ea.re[,is.element(ASS.cn,lo.des.nm)]
-                sh.des <- ea.re[,is.element(ASS.cn,sh.des.nm)]
-                if (ea.ty == "A5SS"){
-                    min.r <- max(as.integer(sh.ex)) - 20
-                    max.r <- min(as.integer(c(ASS.nei))) + 20
-                    ASS.sp <- paste(sh.ex.2,lo.ex.2,sep="-")
-                    names(ASS.sp) <- "Alt.ex"
-                    g.2.p <- c(ea.re[,"ShortEX"],sh.nei)
-                    g.2.p <- rbind(paste(g.2.p,collapse="~"))
-                    g.1.s <- c(splitEnv$splitSplice(ea.re[,"Long_des"],lo.des))
-                    g.2.s <- c(splitEnv$splitSplice(ea.re[,"Short_des"],sh.des))
-                    g.1.e <- c(ASS.sp,sh.nei)
-                    g.2.e <- c(ASS.sp,lo.nei)
-                    t.ex <- c(ASS.sp,lo.nei)
-                    }
-                else if (ea.ty == "A3SS"){
-                    max.r <- min(as.integer(sh.ex)) + 20
-                    min.r <- max(as.integer(c(ASS.nei))) - 20
-                    ASS.sp <- paste(lo.ex.1,sh.ex.1,sep="-")
-                    names(ASS.sp) <- "Alt.ex"
-                    g.2.p <- c(sh.nei,ea.re[,"ShortEX"])
-                    g.2.p <- rbind(paste(g.2.p,collapse="~"))
-                    g.1.s <- c(splitEnv$splitSplice(lo.des,ea.re[,"Long_des"]))
-                    g.2.s <- c(splitEnv$splitSplice(sh.des,ea.re[,"Short_des"]))
-                    g.1.e <- c(sh.nei,ASS.sp)
-                    g.2.e <- c(lo.nei,ASS.sp)
-                    t.ex <- c(lo.nei,ASS.sp)
-                    }
-                each.ran <- cbind(min.r,max.r)
-                colnames(each.ran) <- c("start","end")
-                g.1.p <- NULL
-                t.sp <- c(g.1.s,g.2.s)
-                e.chr <- unique(ea.re[,"Nchr"])
-                pr.re <- ExReads(t.ex,g.1.s,g.1.e,g.2.e,g.1.p,g.2.p,
-                        g.1.s,g.2.s,e.chr,each.ran,"exon","ASS",ins,minr)
-                pr.re
-            }
+            ASS.ratio <- bplapply(seq_len(nrow(ASS.re)),ASS.te,BPPARAM=parm)
+            ASS.ratio <- do.call(rbind,ASS.ratio)
             te.cn <- "Index|EnsID|Nchr|ShortEX|LongEX|NeighborEX|Types"
             cn <- colnames(ASS.result)[grep(te.cn,colnames(ASS.result))]
             ASS.result <- cbind(rbind(ASS.result[,cn]),ASS.ratio)
@@ -424,6 +427,8 @@ RatioFromReads <- function(ASdb=NULL,Total.bamfiles=NULL,readsInfo=
         names(final.re) <- c("ES","ASS","IR")
         return (final.re)
     }
+    splitEnv <- environment(splitSplice)
+    cEnv <- environment(coorEX)
     ins <- inserSize
     ea.re <- NULL
     ES.num <- NULL
@@ -437,8 +442,6 @@ RatioFromReads <- function(ASdb=NULL,Total.bamfiles=NULL,readsInfo=
     fi.pair.2 <- NULL
     se.pair.2 <- NULL
     final.re <- NULL
-    Ncor <- makeCluster(Ncor)
-    registerDoParallel(Ncor)
     called.packages <- c("GenomicRanges","GenomicFeatures")
     sample.files <- rbind(Total.bamfiles[,"path"])
     sample.names <- rbind(Total.bamfiles[,"names"])
@@ -460,8 +463,9 @@ RatioFromReads <- function(ASdb=NULL,Total.bamfiles=NULL,readsInfo=
         }
     }
     else    test.mat <- T.spl
+    parm <- SnowParam(workers=Ncor,type="SOCK")
     final.ra <- Each.Cal.ratio(sample.files,test.mat,
-        splitEnv,cEnv,ins,minr,readLen,readsInfo)
+        splitEnv,cEnv,ins,minr,readLen,readsInfo,parm)
     if (!any(length(final.ra$"ES")))    final.ra$"ES" <- as.matrix("NA")
     if (!any(length(final.ra$"ASS")))    final.ra$"ASS" <- as.matrix("NA")
     if (!any(length(final.ra$"IR")))    final.ra$"IR" <- as.matrix("NA")
@@ -478,7 +482,6 @@ RatioFromReads <- function(ASdb=NULL,Total.bamfiles=NULL,readsInfo=
         write.table(final.ra[["IR"]],
             paste(p.out,"IR_Ratio.txt",sep=""),sep='\t',quote=FALSE)
     }
-    stopCluster(Ncor)
     return(ASdb)
 }
 

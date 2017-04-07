@@ -1,9 +1,8 @@
 CompGroupAlt <- function(ASdb=NULL,GroupSam=NULL,Ncor=1,
     CalIndex=NULL,out.dir=NULL){
-    CalsigGroup <- function(ratio.mat=NULL,A.groups,B.groups){
+    CalsigGroup <- function(ratio.mat=NULL,A.groups,B.groups,parm){
         p.glm <- NULL
-        p.result <- foreach(each.nums=seq_len(nrow(ratio.mat)),
-            .packages=called.packages,.combine=rbind) %dopar% {
+        mulG <- function(each.nums){
             each.mat <- rbind(ratio.mat[each.nums,])
             A.nums <- is.element(colnames(each.mat),A.groups)
             B.nums <- is.element(colnames(each.mat),B.groups)
@@ -30,6 +29,8 @@ CompGroupAlt <- function(ASdb=NULL,GroupSam=NULL,Ncor=1,
             }
             else as.matrix("NA")
         }
+        p.result <- bplapply(seq_len(nrow(ratio.mat)),mulG,BPPARAM=parm)
+        p.result <- do.call(rbind,p.result)
         ratio.mat <- cbind(ratio.mat,p.result)
         colnames(ratio.mat)[ncol(ratio.mat)] <- "Diff.P"
         return (ratio.mat)
@@ -40,8 +41,7 @@ CompGroupAlt <- function(ASdb=NULL,GroupSam=NULL,Ncor=1,
     each.nums <- NULL
     each.p.result <- NULL
     called.packages <- c("lme4","GenomicRanges","GenomicFeatures")
-    Ncor <- makeCluster(Ncor)
-    registerDoParallel(Ncor)
+    parm <- SnowParam(workers=Ncor,type="SOCK")
     T.ra <- ASdb@"Ratio"
     not.values <- any(length(T.ra)) & T.ra != "NA" & !is.na(T.ra)
     tested.types <- names(T.ra)[not.values]
@@ -55,7 +55,7 @@ CompGroupAlt <- function(ASdb=NULL,GroupSam=NULL,Ncor=1,
             }
             if (length(each.ratio.mat)){
                 each.p.result <- sigEnv$CalsigGroup(each.ratio.mat,
-                    A.groups,B.groups)
+                    A.groups,B.groups,parm)
                 real.num <- each.p.result[,"Diff.P"] != "NA"
                 each.p.result <- rbind(each.p.result[real.num,])
                 inter.cn <- c("Index","EnsID","Strand","Nchr",
@@ -89,7 +89,6 @@ CompGroupAlt <- function(ASdb=NULL,GroupSam=NULL,Ncor=1,
         write.table(total.p$"IR",
             paste(p.out,"/IR_CompGroup.txt",sep=""),sep='\t',quote=FALSE)
     }
-    stopCluster(Ncor)
     return (ASdb)
     
 }
